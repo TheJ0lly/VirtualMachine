@@ -28,7 +28,7 @@ Stack::Stack(const int &memory_allocated)
 
     //We announce the user that the allocation of memory has been successful and we give him proper messages to explain what is happening at the moment.
     std::cout << "Stack has been allocated: " << memory.capacity() << " blocks." << std::endl;
-    std::cout << "Initializing memory..." << std::endl;
+    std::cout << "Initializing stack memory..." << std::endl;
     
     //We intialize the 'END_OF_STACK' as the upper limit.
     this->END_OF_STACK = memory.capacity() - 1;
