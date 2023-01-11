@@ -26,7 +26,7 @@ class Stack
     private:
         
         /*
-            Block represents a block of memory from inside the Stack.
+            Block represents a block of memory from inside the Stack. A block of memory consist of 3 values adding up to 32 bits/4 bytes.
                 'value' refers to the value inside the block.
                 'type' refers to the type of block: storage or program.
                 'dataType' refers to the type of the value in the block, or the return type of a program.
