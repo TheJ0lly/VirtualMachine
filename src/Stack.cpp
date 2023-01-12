@@ -43,7 +43,6 @@ Stack::Stack(const int &memory_allocated)
     
     std::cout << "Memory initialization complete!\n" << std::endl;
     this->stackInitialized = true;
-
 }
 
 Stack::~Stack()
@@ -79,6 +78,23 @@ int16_t Stack::getStackValue(const int &location)
     return this->memory[location].value;
 }
 
+
+char Stack::getStackValueType(const int &location)
+{
+    if (location == -1)
+    {
+        return this->memory[this->StackPointer].dataType;
+    }
+    else if (location > this->END_OF_STACK)
+    {
+        std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
+        return OUT_OF_STACK_MEMORY;
+    }
+
+    return this->memory[location].dataType;
+}
+
+
 //Returns the address of the current block.
 uint16_t Stack::getCurrentLocation()
 {
@@ -87,7 +103,7 @@ uint16_t Stack::getCurrentLocation()
         
 /*
     Changes the values of the block at the current address. 
-    'value' refers to the value inside the block. Can be anything between 0 - 65535.
+    'value' refers to the value inside the block. Can be anything between 0 - 65535. -1 if is terminator.
     'blockType' refers to the type of the block. Can be 's' or 'p'.
     'dataType' refers to the type of the value. Can be 'i', 'c' or 't'
 */

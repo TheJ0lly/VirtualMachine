@@ -34,7 +34,19 @@ int main()
     //We look for the value of the terminator.
     while (mem.getStackValue() != -1)
     {
-        std::cout << (char)mem.getStackValue();
+        if (mem.getStackValueType() == 'c')
+        {
+            std::cout << (char)mem.getStackValue();
+        }
+        else if (mem.getStackValueType() == 'i')
+        {
+            std::cout << mem.getStackValue();
+        }
+        else
+        {
+            break;
+        }
+
         mem.moveStackPointer(mem.getCurrentLocation() + 1);
         
         //If we don't find a terminator, that means we forgot to add it, thus we access every block of memory. In this if statement we check if it hits the last block of the stack, in that case, we HALT.
@@ -47,4 +59,16 @@ int main()
 
     std::cout << std::endl;
 
+
+    
+
+    /*
+    
+    Example of the language
+
+    x = "test"       looks to allocate 4 characters in the stack next to each other
+    output(x)       will output the string starting from the address of 'x'
+
+
+    */
 }

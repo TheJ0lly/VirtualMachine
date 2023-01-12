@@ -60,6 +60,8 @@ class Stack
 
         int16_t getStackValue(const int &location = -1);
 
+        char getStackValueType(const int &location = -1);
+
         uint16_t getCurrentLocation();
 
         uint16_t changeValueAtCurrentLocation(const char &blockType = 'n', const char &dataType = 'n', const int16_t &value = -1);
