@@ -17,7 +17,12 @@
 #define PROGRAM_TYPE_WHERE_STORAGE -2
 //Error indicating that a block of memory which is used for a program, is valued as a variable, which is not correct.
 #define VARIABLE_TYPE_WHERE_PROGRAM -3
-
+//
+#define OUT_OF_RANGE_ASSIGNMENT -4
+//
+#define UNKNOWN_BLOCK_TYPE -5
+//
+#define UNKNOWN_DATA_TYPE -6
 
 
 
@@ -28,13 +33,13 @@ class Stack
         /*
             Block represents a block of memory from inside the Stack. A block of memory consist of 3 values adding up to 32 bits/4 bytes.
                 'value' refers to the value inside the block.
-                'type' refers to the type of block: storage or program.
+                'blockType' refers to the type of block: storage or program.
                 'dataType' refers to the type of the value in the block, or the return type of a program.
         */
-        typedef struct 
+        typedef struct Block
         {
-            uint16_t value;
-            char type;
+            int16_t value;
+            char blockType;
             char dataType;
         } Block;
 
@@ -48,27 +53,22 @@ class Stack
 
     public:
         
-        //Initializes the memory stack. 'memory_allocated' refers to how many blocks of 32 bits to be constructed.
         Stack(const int &memory_allocated = STACK_MEMORY_MAX);
         ~Stack();
 
-        //Moves the stack pointer to a specific address in the stack. Returns STACK_OPERATION_SUCCES(0) on succes, otherwise either PROTECTED_MEMORY_HIT(-1) or OUT_OF_STACK_MEMORY(-2).
         uint16_t moveStackPointer(const uint16_t &location);
 
-        //Returns the value from the stack at the address of 'StackPointer'.
-        uint16_t getStackValue();
+        int16_t getStackValue(const int &location = -1);
 
-        //Returns the address of the current block.
         uint16_t getCurrentLocation();
 
-        //Changes the value of the block at the current address.
-        void changeValueAtCurrentLocation(const uint16_t &value, const char &type, const char &dataType);
+        uint16_t changeValueAtCurrentLocation(const char &blockType = 'n', const char &dataType = 'n', const int16_t &value = -1);
 
-        //Returns 'true' if the stack has been initialized successfully, else 'false'.
         bool isStackInitialized();
 
-        //Outputs information about the stack.
         void getStackInfo();
+
+        uint16_t getEOS();
 };
 
 
