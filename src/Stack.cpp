@@ -35,6 +35,11 @@ Stack::Stack(const int &memory_allocated)
     //We intialize the 'END_OF_STACK' as the upper limit.
     this->END_OF_STACK = memory.capacity() - 1;
 
+    for (int i = 0; i <= this->END_OF_STACK; i++)
+    {
+        this->memory.push_back(Block());
+    }
+
 
     std::cout << "Blocks available to use: " << memory.capacity() << ".\nAddresses available: (0-" << END_OF_STACK << ")." << std::endl;
     std::cout << "Memory allocated: " << sizeof(Block) * memory_allocated << " bytes.\nSize of one block is: " << sizeof(Block) << " bytes." << std::endl;

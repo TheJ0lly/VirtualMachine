@@ -41,6 +41,7 @@ class Stack
             int16_t value;
             char blockType;
             char dataType;
+            Block(): value(0), blockType('n'), dataType('n') {}; 
         } Block;
 
 
@@ -64,7 +65,7 @@ class Stack
 
         uint16_t getCurrentLocation();
 
-        uint16_t changeValueAtCurrentLocation(const char &blockType = 'n', const char &dataType = 'n', const int16_t &value = -1);
+        uint16_t changeValueAtCurrentLocation(const char &blockType = 'n', const char &dataType = 'n', const int16_t &value = 0);
 
         bool isStackInitialized();
 
