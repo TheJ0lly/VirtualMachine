@@ -17,11 +17,11 @@
 #define PROGRAM_TYPE_WHERE_STORAGE -2
 //Error indicating that a block of memory which is used for a program, is valued as a variable, which is not correct.
 #define VARIABLE_TYPE_WHERE_PROGRAM -3
-//
+//Error indicating that a value is exceeding 32 bits.
 #define OUT_OF_RANGE_ASSIGNMENT -4
-//
+//Error indicating unknown block type
 #define UNKNOWN_BLOCK_TYPE -5
-//
+//Error indicating unknown data type
 #define UNKNOWN_DATA_TYPE -6
 
 
@@ -31,17 +31,15 @@ class Stack
     private:
         
         /*
-            Block represents a block of memory from inside the Stack. A block of memory consist of 3 values adding up to 32 bits/4 bytes.
+            Block represents a block of memory from inside the Stack. A block of memory consist of 3 values adding up to 48 bits/6 bytes.
                 'value' refers to the value inside the block.
-                'blockType' refers to the type of block: storage or program.
                 'dataType' refers to the type of the value in the block, or the return type of a program.
         */
         typedef struct Block
         {
-            int16_t value;
-            char blockType;
+            float value;
             char dataType;
-            Block(): value(0), blockType('n'), dataType('n') {}; 
+            Block(): value(0), dataType('n') {}; 
         } Block;
 
 
@@ -59,13 +57,13 @@ class Stack
 
         uint16_t moveStackPointer(const uint16_t &location);
 
-        int16_t getStackValue(const int &location = -1);
+        float getStackValue(const int &location = -1);
 
         char getStackValueType(const int &location = -1);
 
         uint16_t getCurrentLocation();
 
-        uint16_t changeValueAtCurrentLocation(const char &blockType = 'n', const char &dataType = 'n', const int16_t &value = 0);
+        uint16_t changeValueAtCurrentLocation(const char &dataType = 'n', const float &value = 0);
 
         bool isStackInitialized();
 

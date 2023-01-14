@@ -13,6 +13,10 @@ class VM
         ~VM();
 
 
+        int storeData();
+
+        int executeProgram();
+
 
 };
 
