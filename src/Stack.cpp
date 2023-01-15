@@ -56,7 +56,7 @@ Stack::~Stack()
 }
 
 //Moves the stack pointer to a specific address in the stack. Returns STACK_OPERATION_SUCCES(0) on succes, otherwise OUT_OF_STACK_MEMORY(-2).
-uint16_t Stack::moveStackPointer(const uint16_t &location)
+uint16_t Stack::moveStackPointer(const int32_t &location)
 {
     if (location > this->END_OF_STACK)
     {
@@ -128,7 +128,7 @@ char Stack::getStackValueType(const int &location)
 
 
 //Returns the address of the current block.
-uint16_t Stack::getCurrentLocation()
+uint32_t Stack::getCurrentLocation()
 {
     return this->StackPointer;
 }
@@ -199,7 +199,7 @@ void Stack::getStackInfo()
 }
 
 //Returns the last address of the stack.
-uint16_t Stack::getEOS()
+uint32_t Stack::getEOS()
 {
     return this->END_OF_STACK;
 }

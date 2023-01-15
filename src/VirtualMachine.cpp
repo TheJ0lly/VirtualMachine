@@ -166,72 +166,81 @@ int VM::deallocateMemory(Var &var)
 {
     int add = var.address;
     int len = 0;
-    
-    for (int i = var.address; i < STACK_MEMORY_MAX; i++)
-    {
-        this->memory->moveStackPointer(i);
-        if (this->memory->getStackValueType() != 'n')
-        {
-            len++;
-        }
-        else
-        {
-            break;
-        }
-    }
 
-    for (int i = 0; i < len; i++)
+    if (var.type == 's')
     {
-        this->memory->moveStackPointer(add + i);
-        this->memory->changeValueAtCurrentLocation('n');
-    }
+        for (int i = var.address; i < STACK_MEMORY_MAX; i++)
+        {
+            this->memory->moveStackPointer(i);
+            if (this->memory->getStackValueType() != 'n' && this->memory->getStackValueType() != 't')
+            {
+                len++;
+            }
+            else
+            {
+                break;
+            }
+        }
 
+        for (int i = 0; i < len + 1; i++)
+        {
+            this->memory->moveStackPointer(add + i);
+            this->memory->changeValueAtCurrentLocation('n');
+        }
+
+        var.address = -1;
+        var.type = 'n';
+        return VM_SUCCES;
+    }
+    this->memory->moveStackPointer(var.address);
+    this->memory->changeValueAtCurrentLocation('n');
     var.address = -1;
     var.type = 'n';
+    return VM_SUCCES;
 
-    return STACK_OPERATION_SUCCES;
+    
 }
 
 
-void VM::print(const Var &variable)
+int VM::print(const Var &variable)
 {
     if (variable.type == 'n')
     {
-        return;
+        std::cerr << "VIRTUAL MACHINE ERROR: TRIED PRINTING UNUSED MEMORY" << std::endl;
+        return VM_TRIED_ACCESSING_UNUSED_BLOCK;
     }
 
     switch (variable.type)
     {
         case 'i':
-            std::cout << this->memory->getStackValue_INT(variable.address);
-            break;
+            std::cout << this->memory->getStackValue_INT(variable.address) << std::endl;
+            return VM_SUCCES;
         case 'f':
-            std::cout << this->memory->getStackValue_FLOAT(variable.address);
-            break;
+            std::cout << this->memory->getStackValue_FLOAT(variable.address) << std::endl;
+            return VM_SUCCES;
         case 's':
         {
             int counter = variable.address;
-            RetrievedData b;
             while (this->memory->getStackValueType(counter) != 't')
             {
-                b = this->retrieveData(counter);
-                std::cout << b;
+                std::cout << this->memory->getStackValue_CHAR(counter);
                 counter++;
             }
             std::cout << std::endl;
-            return;
+            return VM_SUCCES;
         }
         default:
             if (variable.type != 'i' && variable.type != 'f' && variable.type != 's')
             {
                 std::cerr << "VIRTUAL MACHINE ERROR: UNKNOWN DATA TYPE FOR VARIABLE" << std::endl;
-                return;
+                return VM_UNKNOWN_DATA_TYPE;
             }
     }
+    return VM_SUCCES;
 }
 
 //TODO
-void VM::print(const std::string &variable)
-{
+// int VM::print(const std::string &variable)
+// {
     
-}
+// }

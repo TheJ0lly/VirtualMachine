@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#define STACK_MEMORY_MAX 65535
+#define STACK_MEMORY_MAX 1000000
 
 //Return values
 #define STACK_OPERATION_SUCCES 0
@@ -31,7 +31,7 @@ class Stack
     private:
         
         /*
-            Block represents a block of memory from inside the Stack. A block of memory consist of 3 values adding up to 48 bits/6 bytes.
+            Block represents a block of memory from inside the Stack. A block of memory is 8 bytes.
                 'value' refers to the value inside the block.
                 'dataType' refers to the type of the value in the block, or the return type of a program.
         */
@@ -51,10 +51,10 @@ class Stack
 
 
         std::vector<Block> memory;
-        uint16_t END_OF_STACK;
+        int32_t END_OF_STACK;
         bool stackInitialized = false;
         
-        uint16_t StackPointer;
+        int32_t StackPointer;
 
 
     public:
@@ -62,7 +62,7 @@ class Stack
         Stack(const int &memory_allocated = STACK_MEMORY_MAX);
         ~Stack();
 
-        uint16_t moveStackPointer(const uint16_t &location);
+        uint16_t moveStackPointer(const int32_t &location);
 
         float getStackValue_FLOAT(const int &location = -1);
 
@@ -72,7 +72,7 @@ class Stack
 
         char getStackValueType(const int &location = -1);
 
-        uint16_t getCurrentLocation();
+        uint32_t getCurrentLocation();
 
         uint16_t changeValueAtCurrentLocation(const char &dataType = 'n', const float &value = 0);
 
@@ -80,7 +80,7 @@ class Stack
 
         void getStackInfo();
 
-        uint16_t getEOS();
+        uint32_t getEOS();
 };
 
 

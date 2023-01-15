@@ -4,11 +4,12 @@
 #include "../Stack/Stack.hpp"
 
 //Errors
-#define VM_SUCCES               0
-#define VM_UNKNOWN_DATA_TYPE    -1
-#define VM_FAILED_TO_STORE_DATA -2
-#define VM_FAILED_TO_RETREIVE   -3
-#define VM_FAILED_TO_ALLOCATE   -4
+#define VM_SUCCES               			0
+#define VM_UNKNOWN_DATA_TYPE    			-1
+#define VM_FAILED_TO_STORE_DATA 			-2
+#define VM_FAILED_TO_RETREIVE               -3
+#define VM_FAILED_TO_ALLOCATE               -4
+#define VM_TRIED_ACCESSING_UNUSED_BLOCK		-5
 
 
 typedef struct RetrievedData
@@ -52,9 +53,9 @@ typedef struct Variable
     Variable(const std::pair<int, char> &var): address(var.first), type(var.second) {};
 } Var;
 
+//MAX MEMORY THAT CAN BE ALLOCATED TO THE VM IS: 1_000_000
 class VM
 {
-    friend Var;
     private:
 
         Stack *memory = nullptr;
@@ -70,8 +71,8 @@ class VM
         int deallocateMemory(Var &var);
 
 
-        void print(const Var &variable);
-        void print(const std::string &variable);
+        int print(const Var &variable);
+        int print(const std::string &variable);
 
 };
 
