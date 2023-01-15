@@ -37,9 +37,16 @@ class Stack
         */
         typedef struct Block
         {
-            float value;
+
+            union
+            {
+                int IValue;
+                float FValue;
+                char CValue;
+            };
+            
             char dataType;
-            Block(): value(0), dataType('n') {}; 
+            Block(): dataType('n') {}; 
         } Block;
 
 
@@ -57,7 +64,11 @@ class Stack
 
         uint16_t moveStackPointer(const uint16_t &location);
 
-        float getStackValue(const int &location = -1);
+        float getStackValue_FLOAT(const int &location = -1);
+
+        int getStackValue_INT(const int &location = -1);
+
+        char getStackValue_CHAR(const int &location = -1);
 
         char getStackValueType(const int &location = -1);
 

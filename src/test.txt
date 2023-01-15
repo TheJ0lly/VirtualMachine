@@ -1,63 +1,43 @@
-//Example of how to load a string into the STACK.
-    std::vector<uint16_t> currentProgram;
-    Stack mem;
+#include "../include/Stack/Stack.hpp"
+#include "../include/VM/VirtualMachine.hpp"
 
-    //We init the string we want to store.
-    std::string temp{"Matei"};
+int main()
+{
+    VM vm;
 
-    //We set the starting point of the string.
-    currentProgram.push_back(mem.getCurrentLocation());
+    //allocate memory for int.
+    std::pair<int, char> x = vm.allocateMemory("125", 'i');
 
-    //We put all the characters into the memory, block after block starting from the first memory block.
-    for (std::string::size_type i = 0; i < temp.size(); i++)
+    //allocate memory for string.
+    std::pair<int, char> a = vm.allocateMemory("Matei", 's');
+
+    //allocate memory for float.
+    std::pair<int, char> p = vm.allocateMemory("30.21", 'f');
+
+    //print the the address of the variables or the first if it's a string.
+    std::cout << x.first << std::endl;
+    std::cout << a.first << std::endl;
+    std::cout << p.first << std::endl;
+    
+    //we retrieve the value at block 'x'.
+    RetrievedData b = vm.retrieveData(x.first);
+
+    //print the integer.
+    std::cout << b << std::endl;
+
+    //print the string.
+    for (int i = a.first; i < a.first + 5; i++)
     {
-        mem.changeValueAtCurrentLocation('s', 'c', temp[i]);
-        mem.moveStackPointer(mem.getCurrentLocation() + 1);
+        //we retrieve the blocks of which the string is composed. Starting from 'a'.
+        b = vm.retrieveData(i);
+        std::cout << b;
     }
-
-    //After the last block containg a character, we put the terminator.
-    mem.changeValueAtCurrentLocation('s', 't');
-
-    //We move the Stack Pointer to the beginning of the string in memory.
-    mem.moveStackPointer(currentProgram[0]);
-
-    //We look for the value of the terminator.
-    while (mem.getStackValue() != -1)
-    {
-        if (mem.getStackValueType() == 'c')
-        {
-            std::cout << (char)mem.getStackValue();
-        }
-        else if (mem.getStackValueType() == 'i')
-        {
-            std::cout << mem.getStackValue();
-        }
-        else
-        {
-            break;
-        }
-
-        mem.moveStackPointer(mem.getCurrentLocation() + 1);
-        
-        //If we don't find a terminator, that means we forgot to add it, thus we access every block of memory. In this if statement we check if it hits the last block of the stack, in that case, we HALT.
-        if (mem.getCurrentLocation() == mem.getEOS())
-        {
-            std::cout << "\nSTOP" << std::endl;
-            break;
-        }
-    }
-
     std::cout << std::endl;
-
-
     
+    //we retrieve the value at block 'p'
+    b = vm.retrieveData(p.first);
 
-    /*
-    
-    Example of the language
+    //print the float
+    std::cout << b << std::endl;
 
-    x = "test"       looks to allocate 4 characters in the stack next to each other
-    output(x)       will output the string starting from the address of 'x'
-
-
-    */
+}

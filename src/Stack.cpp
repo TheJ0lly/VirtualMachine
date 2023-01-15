@@ -68,22 +68,49 @@ uint16_t Stack::moveStackPointer(const uint16_t &location)
     return STACK_OPERATION_SUCCES;
 }
 
-//Returns the value from the stack at the address of 'StackPointer'.
-float Stack::getStackValue(const int &location)
+float Stack::getStackValue_FLOAT(const int &location)
 {
     if (location == -1)
     {
-        return this->memory[this->StackPointer].value;
+        return this->memory[this->StackPointer].FValue;
     }
     else if (location > this->END_OF_STACK)
     {
         std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
         return OUT_OF_STACK_MEMORY;
     }
-    return this->memory[location].value;
+    return this->memory[location].FValue;
 }
 
+int Stack::getStackValue_INT(const int &location)
+{
+    if (location == -1)
+    {
+        return this->memory[this->StackPointer].IValue;
+    }
+    else if (location > this->END_OF_STACK)
+    {
+        std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
+        return OUT_OF_STACK_MEMORY;
+    }
+    return this->memory[location].IValue;
+}
 
+char Stack::getStackValue_CHAR(const int &location)
+{
+    if (location == -1)
+    {
+        return this->memory[this->StackPointer].CValue;
+    }
+    else if (location > this->END_OF_STACK)
+    {
+        std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
+        return OUT_OF_STACK_MEMORY;
+    }
+    return this->memory[location].CValue;
+}
+
+//Returns the data type of the value in the block.
 char Stack::getStackValueType(const int &location)
 {
     if (location == -1)
@@ -107,33 +134,52 @@ uint16_t Stack::getCurrentLocation()
 }
         
 /*
-    Changes the values of the block at the current address. 
-    'value' refers to the value inside the block. Can be anything between 0 - 65535. -1 if is terminator.
-    'dataType' refers to the type of the value. Can be 'i', 'c', 'f' or 't'
+    Changes the values of the block at the current address.
+    'value' refers to the value inside the block. -1 if is terminator.
+    'dataType' refers to the type of the value. Can be 'i', 'c', 'f' or 't'.
 */
 uint16_t Stack::changeValueAtCurrentLocation(const char &dataType, const float &value)
 {
-    if (value > UINT16_MAX)
-    {
-        std::cerr << "STACK ERROR: VALUE ASSIGNMENT EXCEEDS LIMIT OF 16 BITS" << std::endl;
-        return OUT_OF_RANGE_ASSIGNMENT;
-    }
-    if (dataType != 'i' && dataType != 'c' && dataType != 't')
-    {
-        std::cerr << "STACK ERROR: VALUE DATATYPE ASSIGNMENT IS UNKNOWN\nTypes of data types supported:\n\t-Integer\t'i'\n\t-Character\t'c'\n\t-Terminator\t't'" << std::endl;
-        return UNKNOWN_DATA_TYPE;
-    }
 
-    if (dataType == 't')
+    if (dataType == 'n')
     {
-        this->memory[this->StackPointer].value = -1;
+        this->memory[this->StackPointer].dataType = 'n';
+        return STACK_OPERATION_SUCCES;
     }
     else
     {
-        this->memory[this->StackPointer].value = value;
+        if (dataType != 'i' && dataType != 'c' && dataType != 't' && dataType != 'f')
+        {
+            std::cerr << "STACK ERROR: VALUE DATATYPE ASSIGNMENT IS UNKNOWN\nTypes of data types supported:\n\t-Integer\t'i'\n\t-Character\t'c'\n\t-Terminator\t't'\n\t-Float\t\t'f'" << std::endl;
+            return UNKNOWN_DATA_TYPE;
+        }
+    }
+
+
+    if (value > INT32_MAX)
+    {
+        std::cerr << "STACK ERROR: VALUE ASSIGNMENT EXCEEDS LIMIT OF 32 BITS" << std::endl;
+        return OUT_OF_RANGE_ASSIGNMENT;
     }
     
     this->memory[this->StackPointer].dataType = dataType;
+
+    if (dataType == 'c')
+    {
+        this->memory[this->StackPointer].CValue = (char)value;
+    }
+    else if (dataType == 'f')
+    {
+        this->memory[this->StackPointer].FValue = value;
+    }    
+    else if (dataType == 'i')
+    {
+        this->memory[this->StackPointer].IValue = (int)value;
+    }    
+    else if (dataType == 't')
+    {
+        this->memory[this->StackPointer].IValue = -1;
+    }
 
     return STACK_OPERATION_SUCCES;
 }
