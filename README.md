@@ -11,8 +11,8 @@ As of now, there are functions from the VirtualMachine class, which allocate and
 Is the name of the soon to be programming language that will operate on this Virtual Machine. It will be a procedural programming language, which will have 3 data types: string, int, float. There will be arrays for these data types.
 
 LION will contain the following:  
-    > - Data Types: string, int, float  
-    > - Array support  
-    > - Functions  
-    > - Pointers(maybe)  
-    > -Complex data types(something alike "struct" in C/C++)  
+    &emsp;-Data Types: string, int, float  
+    &emsp;-Array support  
+    &emsp;-Functions  
+    &emsp;-Pointers(maybe)  
+    &emsp;-Complex data types(something alike "struct" in C/C++)  
