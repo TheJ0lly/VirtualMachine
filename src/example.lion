@@ -1,2 +1,4 @@
-x = "Test"
+string x = "Test"
+int a = 125
+float b = 69.69
 output(x)

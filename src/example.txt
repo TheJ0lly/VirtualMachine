@@ -1,6 +1,5 @@
 #include "../include/Stack/Stack.hpp"
 #include "../include/VM/VirtualMachine.hpp"
-#include <typeinfo>
 
 int main()
 {

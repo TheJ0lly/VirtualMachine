@@ -12,17 +12,17 @@
 //Errors
 
 //Error indicating that the user is accesing a block of memory out of the capacity of the current stack.
-#define OUT_OF_STACK_MEMORY -1
+#define OUT_OF_STACK_MEMORY				-1
 //Error indicating that a block of memory which is used for storage, is valued as a program, which is not correct.
-#define PROGRAM_TYPE_WHERE_STORAGE -2
+#define PROGRAM_TYPE_WHERE_STORAGE      -2
 //Error indicating that a block of memory which is used for a program, is valued as a variable, which is not correct.
-#define VARIABLE_TYPE_WHERE_PROGRAM -3
+#define VARIABLE_TYPE_WHERE_PROGRAM 	-3
 //Error indicating that a value is exceeding 32 bits.
-#define OUT_OF_RANGE_ASSIGNMENT -4
+#define OUT_OF_RANGE_ASSIGNMENT 		-4
 //Error indicating unknown block type
-#define UNKNOWN_BLOCK_TYPE -5
+#define UNKNOWN_BLOCK_TYPE 				-5
 //Error indicating unknown data type
-#define UNKNOWN_DATA_TYPE -6
+#define UNKNOWN_DATA_TYPE 				-6
 
 
 
