@@ -129,9 +129,7 @@ std::pair<int, char> VM::allocateMemory(const std::string &value, const char &ty
                     start = x + 1;
                     continue;
                 }
-                
-
-                if (this->memory->getStackValueType() == 'n')
+                else
                 {
                     check++;
                 }
@@ -161,6 +159,7 @@ std::pair<int, char> VM::allocateMemory(const std::string &value, const char &ty
             return std::pair<int, char>{VM_UNKNOWN_DATA_TYPE, 'n'};
     }
 }
+
 
 int VM::deallocateMemory(Var &var)
 {
@@ -201,6 +200,166 @@ int VM::deallocateMemory(Var &var)
     
 }
 
+
+std::pair<std::vector<int>, char> VM::allocateMemoryArray(const std::vector<std::string> &values, const char &type)
+{
+    int len = values.size();
+    int check = 0;
+    int start = 0;
+    int counter = 0;
+    std::vector<int> addresses;
+
+    switch(type)
+    {
+        case 'i':
+        {
+            for (int x = 0; x < STACK_MEMORY_MAX; x++)
+            {
+                if (check == len)
+                {
+                    break;
+                }
+
+
+                if (this->memory->getStackValueType() != 'n')
+                {
+                    check = 0;
+                    start = x + 1;
+                    continue;
+                }
+                else
+                {
+                    check++;
+                }
+            }
+
+            for (int x = start; x < len + start; x++)
+            {
+                Var temp = this->allocateMemory(values[counter], type);
+                counter++;
+                addresses.push_back(temp.address);
+            }
+
+            return std::pair<std::vector<int>, char>{addresses, 'i'};
+
+        }
+        case 'f':
+        {
+            for (int x = 0; x < STACK_MEMORY_MAX; x++)
+            {
+                if (check == len)
+                {
+                    break;
+                }
+
+
+                if (this->memory->getStackValueType() != 'n')
+                {
+                    check = 0;
+                    start = x + 1;
+                    continue;
+                }
+                else
+                {
+                    check++;
+                }
+            }
+
+            for (int x = start; x < len + start; x++)
+            {
+                Var temp = this->allocateMemory(values[counter], type);
+                counter++;
+                addresses.push_back(temp.address);
+            }
+
+            return std::pair<std::vector<int>, char>{addresses, 'f'};
+        }
+        case 's':
+        {
+            for (int x = 0; x < STACK_MEMORY_MAX; x++)
+            {
+                if (check == len)
+                {
+                    break;
+                }
+
+                if (this->memory->getStackValueType() != 'n')
+                {
+                    check = 0;
+                    start = x + 1;
+                    continue;
+                }
+                else
+                {
+                    check++;
+                }
+            }
+            
+            for (int x = start; x < len + start; x++)
+            {
+                Var temp = this->allocateMemory(values[counter], type);
+                counter++;
+                addresses.push_back(temp.address);
+            }
+            return std::pair<std::vector<int>, char>{addresses, 's'};
+        }
+    }
+}
+
+int VM::deallocateMemoryArray(Array &arr)
+{
+    int size = arr.addresses.size();
+
+    switch (arr.type)
+    {
+        case 'i':
+            for (int i = size - 1; i >= 0; i--)
+            {
+                this->memory->moveStackPointer(arr.at(i).address);
+                this->memory->changeValueAtCurrentLocation('n', -1);
+                arr.addresses.pop_back();
+            }
+            break;
+        case 'f':
+            for (int i = size - 1; i >= 0; i--)
+            {
+                this->memory->moveStackPointer(arr.at(i).address);
+                this->memory->changeValueAtCurrentLocation('n', -1);
+                arr.addresses.pop_back();
+            }
+            break;
+        case 's':
+            for (int i = size - 1; i >= 0; i--)
+            {
+                int add = arr.at(i).address;
+                int len = 0;
+
+                this->memory->moveStackPointer(arr.at(i).address);
+                for (int x = arr.at(i).address; x < STACK_MEMORY_MAX; x++)
+                {
+                    this->memory->moveStackPointer(x);
+                    if (this->memory->getStackValueType() != 'n' && this->memory->getStackValueType() != 't')
+                    {
+                        len++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                for (int x = 0; x <= len; x++)
+                {
+                    this->memory->moveStackPointer(add + i);
+                    this->memory->changeValueAtCurrentLocation('n');
+                }
+                arr.addresses.pop_back();
+            }
+            break;
+    }
+
+    return VM_SUCCES;
+}
 
 int VM::print(const Var &variable)
 {
@@ -244,3 +403,22 @@ int VM::print(const Var &variable)
 // {
     
 // }
+
+int VM::print(const int &location)
+{
+    char type = this->memory->getStackValueType(location);
+
+    switch(type)
+    {
+        case 'i':
+            std::cout << this->memory->getStackValue_INT(location) << std::endl; 
+            break;
+        case 'f':
+            std::cout << this->memory->getStackValue_FLOAT(location) << std::endl;
+            break;
+        case 'c':
+            std::cout << this->memory->getStackValue_CHAR(location) << std::endl;
+            break;
+    }
+    return VM_SUCCES;
+}

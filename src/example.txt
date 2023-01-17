@@ -28,4 +28,26 @@ int main()
     Var p = vm.allocateMemory("KA", 's');
     vm.print(p);
     std::cout << p.address << " - " << p.type << "\n" << std::endl;
+
+    //Here we deallocate k and p to make way for the new array
+    vm.deallocateMemory(k);
+    vm.deallocateMemory(p);
+
+
+    //Here we allocate the memory for the array of strings, which will contain 
+    Array arr = vm.allocateMemoryArray({"Test1", "Test2"}, 's');
+    //Here we can see that the addresses are in different locations in memory, but stored next to one another inside of the array.
+    std::cout << "arr addresses: " << arr.addresses[0] << " - " << arr.addresses[1] << "\n" << std::endl;
+
+    for (int i = 0; i < arr.addresses.size(); i++)
+    {
+        vm.print(arr.at(i));
+        std::cout << arr.at(i).address << " - " << arr.at(i).type << "\n" << std::endl;
+    }
+
+    //Here we deallocate all the memory used by the array
+    vm.deallocateMemoryArray(arr);
+
+    //Here we will get 2 errors: TRYING TO ACCESS UNALLOCATED MEMORY and TRIED PRINTING UNUSED MEMORY, because we deallocated the memory of 'arr' and because we try to print something from a not-used block.
+    vm.print(arr.at(1));
 }

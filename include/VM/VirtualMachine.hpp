@@ -51,7 +51,25 @@ typedef struct Variable
     char type;
     Variable(): address(-1), type('n') {};
     Variable(const std::pair<int, char> &var): address(var.first), type(var.second) {};
+
 } Var;
+
+typedef struct Array
+{
+    std::vector<int> addresses;
+    char type;
+    Array(): type('n'){};
+    Array(const std::pair<std::vector<int>, char> &array): addresses(array.first), type(array.second){};
+    Var at(const uint32_t &location)
+    {
+        if (location >= addresses.size())
+        {
+            std::cerr << "ARRAY ACCESSING ERROR: TRYING TO ACCESS UNALLOCATED MEMORY" << std::endl;
+            return Var{std::pair<int, char>{-1, 'n'}};
+        }
+        return Var{std::pair<int, char>{this->addresses[location], type}};
+    }
+} Array;
 
 //MAX MEMORY THAT CAN BE ALLOCATED TO THE VM IS: 1_000_000
 class VM
@@ -71,8 +89,13 @@ class VM
         int deallocateMemory(Var &var);
 
 
+        std::pair<std::vector<int>, char> allocateMemoryArray(const std::vector<std::string> &values, const char &type);
+        int deallocateMemoryArray(Array &arr);
+
+
         int print(const Var &variable);
         int print(const std::string &variable);
+        int print(const int &location);
 
 };
 

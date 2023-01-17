@@ -1,4 +1,10 @@
-string x = "Test"
-int a = 125
-float b = 69.69
+string a = "Test"
+int b = 125
+float c = 69.69
+
+array:string x = ["Test1", "Test2"]
+array:int y = [1,2]
+array:float z = [1.2, 6.9]
+
+
 output(x)
