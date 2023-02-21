@@ -1,0 +1,5 @@
+create string,a
+
+init a, "Matei"
+
+output a

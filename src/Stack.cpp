@@ -56,9 +56,9 @@ Stack::~Stack()
 }
 
 //Moves the stack pointer to a specific address in the stack. Returns STACK_OPERATION_SUCCES(0) on succes, otherwise OUT_OF_STACK_MEMORY(-2).
-uint16_t Stack::moveStackPointer(const int32_t &location)
+int16_t Stack::moveStackPointer(const int &location)
 {
-    if (location > this->END_OF_STACK)
+    if (location > this->END_OF_STACK || location < 0)
     {
         std::cerr << "STACK ERROR: OUT OF STACK MEMORY BLOCK" << std::endl;
         return OUT_OF_STACK_MEMORY;
@@ -74,7 +74,8 @@ float Stack::getStackValue_FLOAT(const int &location)
     {
         return this->memory[this->StackPointer].FValue;
     }
-    else if (location > this->END_OF_STACK)
+    
+    if (location > this->END_OF_STACK || location < 0)
     {
         std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
         return OUT_OF_STACK_MEMORY;
@@ -88,7 +89,7 @@ int Stack::getStackValue_INT(const int &location)
     {
         return this->memory[this->StackPointer].IValue;
     }
-    else if (location > this->END_OF_STACK)
+    else if (location > this->END_OF_STACK || location < 0)
     {
         std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
         return OUT_OF_STACK_MEMORY;
@@ -102,7 +103,7 @@ char Stack::getStackValue_CHAR(const int &location)
     {
         return this->memory[this->StackPointer].CValue;
     }
-    else if (location > this->END_OF_STACK)
+    else if (location > this->END_OF_STACK || location < 0)
     {
         std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
         return OUT_OF_STACK_MEMORY;
@@ -117,7 +118,7 @@ char Stack::getStackValueType(const int &location)
     {
         return this->memory[this->StackPointer].dataType;
     }
-    else if (location > this->END_OF_STACK)
+    else if (location > this->END_OF_STACK || location < 0)
     {
         std::cerr << "STACK ERROR: ACCESSING OUT OF STACK MEMORY BLOCK" << std::endl;
         return OUT_OF_STACK_MEMORY;
@@ -125,7 +126,6 @@ char Stack::getStackValueType(const int &location)
 
     return this->memory[location].dataType;
 }
-
 
 //Returns the address of the current block.
 uint32_t Stack::getCurrentLocation()
@@ -170,7 +170,7 @@ uint16_t Stack::changeValueAtCurrentLocation(const char &dataType, const float &
     }
     else if (dataType == 'f')
     {
-        this->memory[this->StackPointer].FValue = value;
+        this->memory[this->StackPointer].FValue = (float)value;
     }    
     else if (dataType == 'i')
     {
@@ -196,6 +196,8 @@ void Stack::getStackInfo()
     std::cout << "Blocks of memory: " << memory.capacity() << std::endl;
     std::cout << "Size of one block: " << sizeof(Block) << std::endl;
     std::cout << "Bytes used by the stack: " << sizeof(Block) * memory.capacity() << std::endl;
+    std::cout << "Support for: int, char, float" << std::endl;
+    std::cout << "32-bits architecture" << std::endl;
 }
 
 //Returns the last address of the stack.

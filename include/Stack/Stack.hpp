@@ -51,10 +51,10 @@ class Stack
 
 
         std::vector<Block> memory;
-        int32_t END_OF_STACK;
+        int END_OF_STACK;
         bool stackInitialized = false;
         
-        int32_t StackPointer;
+        int StackPointer;
 
 
     public:
@@ -62,7 +62,7 @@ class Stack
         Stack(const int &memory_allocated = STACK_MEMORY_MAX);
         ~Stack();
 
-        uint16_t moveStackPointer(const int32_t &location);
+        int16_t moveStackPointer(const int &location);
 
         float getStackValue_FLOAT(const int &location = -1);
 

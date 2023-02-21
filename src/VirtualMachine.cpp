@@ -3,6 +3,7 @@
 //'mem_allocated' refers to how many blocks will be created on the stack.
 VM::VM(const int &mem_allocated)
 {
+    std::cout << "========== INTIALIZATION ==========" << std::endl;
     std::cout << "Initializing Virtual Machine...\n" << std::endl;
 
     if (mem_allocated == 0)
@@ -20,7 +21,8 @@ VM::VM(const int &mem_allocated)
         return;
     }
 
-    std::cout << "Virtual Machine initialized succesfully!\nVirtual Machine is ready to use!\n" << std::endl;
+    std::cout << "Virtual Machine initialized succesfully!\nVirtual Machine is ready to use!" << std::endl;
+    std::cout << "=====================================\n" << std::endl;
 
 }
 
@@ -29,396 +31,163 @@ VM::~VM()
     delete memory;
 }
 
-
-int VM::storeData(const char &dataType, const float &value)
+VAR_PAIR VM::storeString(const std::string &value)
 {
-    int result = this->memory->changeValueAtCurrentLocation(dataType, value);
-
-    if (result == UNKNOWN_DATA_TYPE || result == OUT_OF_RANGE_ASSIGNMENT)
-    {
-        return VM_FAILED_TO_STORE_DATA;
-    }
-
-    return VM_SUCCES;
-}
-
-RetrievedData VM::retrieveData(const int &location)
-{
-    RetrievedData result;
-    result.type = this->memory->getStackValueType(location);
-    
-    switch (result.type)
-    {
-        case 'i':
-            result.IVALUE = this->memory->getStackValue_INT(location);
-            return result;
-        case 'c':
-            result.CVALUE = this->memory->getStackValue_CHAR(location);
-            return result;
-        case 'f':
-            result.FVALUE = this->memory->getStackValue_FLOAT(location);
-            return result;
-        default:
-            std::cerr << "VIRTUAL MACHINE ERROR: FAILED TO RETRIEVE DATA" << std::endl;
-            result.type = 'n';
-            result.IVALUE = VM_FAILED_TO_RETREIVE;
-            return result;
-    }
-}
-
-/*
-    'value' indicates the string read from file or from user to interpret
-    'type' indicates to the data type of the value. Can be 'i', 'f' or 's'.
-*/
-std::pair<int, char> VM::allocateMemory(const std::string &value, const char &type)
-{
-    int i;
-    float f;
-    switch (type)
-    {
-        case 'i':
-        {
-            i = std::stoi(value.c_str());
-            for (int x = 0; x < STACK_MEMORY_MAX; x++)
-            {
-                this->memory->moveStackPointer(x);
-                if (this->memory->getStackValueType() == 'n')
-                {
-                    this->memory->changeValueAtCurrentLocation('i', i);
-                    return std::pair<int, char>{x, 'i'};
-                }
-            }
-            std::cerr << "VIRTUAL MACHINE ERROR: FAILED TO ALLOCATE MEMORY FOR INTEGER: " << i << std::endl;
-            return std::pair<int, char>{VM_FAILED_TO_ALLOCATE, 'i'};
-        }
-        case 'f':
-        {
-            f = std::stof(value.c_str());
-            for (int x = 0; x < STACK_MEMORY_MAX; x++)
-            {
-                this->memory->moveStackPointer(x);
-                if (this->memory->getStackValueType() == 'n')
-                {
-                    this->memory->changeValueAtCurrentLocation('f', f);
-                    return std::pair<int, char>{x, 'f'};
-                }
-            }
-            std::cerr << "VIRTUAL MACHINE ERROR: FAILED TO ALLOCATE MEMORY FOR FLOAT: " << f << std::endl;
-            return std::pair<int, char>{VM_FAILED_TO_ALLOCATE, 'f'};
-        }
-
-        case 's':
-        {
-            int ok = 0;
-            int len = value.size();
-            int start = 0;
-            int check = 0;
-            int counter = 0;
-            for (int x = 0; x < STACK_MEMORY_MAX; x++)
-            {
-                this->memory->moveStackPointer(x);
-                if (check == len)
-                {
-                    ok = 1;
-                    break;
-                }
-                
-                if (this->memory->getStackValueType() != 'n')
-                {
-                    check = 0;
-                    start = x + 1;
-                    continue;
-                }
-                else
-                {
-                    check++;
-                }
-                
-            }
-
-            if (ok)
-            {
-                for (int x = start; x < start + len; x++)
-                {
-                    this->memory->moveStackPointer(x);
-                    this->memory->changeValueAtCurrentLocation('c', value[counter]);
-                    counter++;
-                }
-                this->memory->moveStackPointer(this->memory->getCurrentLocation() + 1);
-                this->memory->changeValueAtCurrentLocation('t');
-                return std::pair<int, char>{start, 's'};
-            }
-            else
-            {
-                std::cerr << "VIRTUAL MACHINE ERROR: FAILED TO ALLOCATE MEMORY FOR STRING: " << value << std::endl;
-                return std::pair<int, char>{VM_FAILED_TO_ALLOCATE, 's'};
-            }
-        }
-        default:
-            std::cerr << "VIRTUAL MACHINE ERROR: UNKNOWN DATA TYPE" << std::endl;
-            return std::pair<int, char>{VM_UNKNOWN_DATA_TYPE, 'n'};
-    }
-}
-
-
-int VM::deallocateMemory(Var &var)
-{
-    int add = var.address;
-    int len = 0;
-
-    if (var.type == 's')
-    {
-        for (int i = var.address; i < STACK_MEMORY_MAX; i++)
-        {
-            this->memory->moveStackPointer(i);
-            if (this->memory->getStackValueType() != 'n' && this->memory->getStackValueType() != 't')
-            {
-                len++;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        for (int i = 0; i < len + 1; i++)
-        {
-            this->memory->moveStackPointer(add + i);
-            this->memory->changeValueAtCurrentLocation('n');
-        }
-
-        var.address = -1;
-        var.type = 'n';
-        return VM_SUCCES;
-    }
-    this->memory->moveStackPointer(var.address);
-    this->memory->changeValueAtCurrentLocation('n');
-    var.address = -1;
-    var.type = 'n';
-    return VM_SUCCES;
-
-    
-}
-
-
-std::pair<std::vector<int>, char> VM::allocateMemoryArray(const std::vector<std::string> &values, const char &type)
-{
-    int len = values.size();
-    int check = 0;
+    this->memory->moveStackPointer(0);
+    int len = (int)value.length();
+    int checkLen = 0;
+    int loc = 0;
     int start = 0;
-    int counter = 0;
-    std::vector<int> addresses;
 
-    switch(type)
+
+    while (true)
     {
-        case 'i':
+        if (this->memory->getStackValueType(loc) == 'n')
         {
-            for (int x = 0; x < STACK_MEMORY_MAX; x++)
-            {
-                if (check == len)
-                {
-                    break;
-                }
-
-
-                if (this->memory->getStackValueType() != 'n')
-                {
-                    check = 0;
-                    start = x + 1;
-                    continue;
-                }
-                else
-                {
-                    check++;
-                }
-            }
-
-            for (int x = start; x < len + start; x++)
-            {
-                Var temp = this->allocateMemory(values[counter], type);
-                counter++;
-                addresses.push_back(temp.address);
-            }
-
-            return std::pair<std::vector<int>, char>{addresses, 'i'};
-
+            checkLen++;
         }
-        case 'f':
+        else
         {
-            for (int x = 0; x < STACK_MEMORY_MAX; x++)
-            {
-                if (check == len)
-                {
-                    break;
-                }
-
-
-                if (this->memory->getStackValueType() != 'n')
-                {
-                    check = 0;
-                    start = x + 1;
-                    continue;
-                }
-                else
-                {
-                    check++;
-                }
-            }
-
-            for (int x = start; x < len + start; x++)
-            {
-                Var temp = this->allocateMemory(values[counter], type);
-                counter++;
-                addresses.push_back(temp.address);
-            }
-
-            return std::pair<std::vector<int>, char>{addresses, 'f'};
+            checkLen = 0;
+            start = loc + 1;
         }
-        case 's':
-        {
-            for (int x = 0; x < STACK_MEMORY_MAX; x++)
-            {
-                if (check == len)
-                {
-                    break;
-                }
 
-                if (this->memory->getStackValueType() != 'n')
-                {
-                    check = 0;
-                    start = x + 1;
-                    continue;
-                }
-                else
-                {
-                    check++;
-                }
-            }
-            
-            for (int x = start; x < len + start; x++)
+        loc++;
+        if (this->memory->moveStackPointer(loc) != STACK_OPERATION_SUCCES)
+        {
+            std::cerr << "VM ERROR: CANNOT ALLOCATE MEMORY FOR THE STRING: " << value << std::endl;
+            return VAR_PAIR{VM_FAILED_TO_ALLOCATE, 'n'};
+        }
+
+        if (checkLen == len)
+        {
+            for (int i = 0; i < len; i++)
             {
-                Var temp = this->allocateMemory(values[counter], type);
-                counter++;
-                addresses.push_back(temp.address);
+                this->storeChar(value[i], start+i);
             }
-            return std::pair<std::vector<int>, char>{addresses, 's'};
+            this->memory->moveStackPointer(start + len);
+            this->memory->changeValueAtCurrentLocation('t');
+            return VAR_PAIR{start, 's'};
         }
     }
-}
-
-int VM::deallocateMemoryArray(Array &arr)
-{
-    int size = arr.addresses.size();
-
-    switch (arr.type)
-    {
-        case 'i':
-            for (int i = size - 1; i >= 0; i--)
-            {
-                this->memory->moveStackPointer(arr.at(i).address);
-                this->memory->changeValueAtCurrentLocation('n', -1);
-                arr.addresses.pop_back();
-            }
-            break;
-        case 'f':
-            for (int i = size - 1; i >= 0; i--)
-            {
-                this->memory->moveStackPointer(arr.at(i).address);
-                this->memory->changeValueAtCurrentLocation('n', -1);
-                arr.addresses.pop_back();
-            }
-            break;
-        case 's':
-            for (int i = size - 1; i >= 0; i--)
-            {
-                int add = arr.at(i).address;
-                int len = 0;
-
-                this->memory->moveStackPointer(arr.at(i).address);
-                for (int x = arr.at(i).address; x < STACK_MEMORY_MAX; x++)
-                {
-                    this->memory->moveStackPointer(x);
-                    if (this->memory->getStackValueType() != 'n' && this->memory->getStackValueType() != 't')
-                    {
-                        len++;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                for (int x = 0; x <= len; x++)
-                {
-                    this->memory->moveStackPointer(add + i);
-                    this->memory->changeValueAtCurrentLocation('n');
-                }
-                arr.addresses.pop_back();
-            }
-            break;
-    }
-
-    return VM_SUCCES;
-}
-
-int VM::print(const Var &variable)
-{
-    if (variable.type == 'n')
-    {
-        std::cerr << "VIRTUAL MACHINE ERROR: TRIED PRINTING UNUSED MEMORY" << std::endl;
-        return VM_TRIED_ACCESSING_UNUSED_BLOCK;
-    }
-
-    switch (variable.type)
-    {
-        case 'i':
-            std::cout << this->memory->getStackValue_INT(variable.address) << std::endl;
-            return VM_SUCCES;
-        case 'f':
-            std::cout << this->memory->getStackValue_FLOAT(variable.address) << std::endl;
-            return VM_SUCCES;
-        case 's':
-        {
-            int counter = variable.address;
-            while (this->memory->getStackValueType(counter) != 't')
-            {
-                std::cout << this->memory->getStackValue_CHAR(counter);
-                counter++;
-            }
-            std::cout << std::endl;
-            return VM_SUCCES;
-        }
-        default:
-            if (variable.type != 'i' && variable.type != 'f' && variable.type != 's')
-            {
-                std::cerr << "VIRTUAL MACHINE ERROR: UNKNOWN DATA TYPE FOR VARIABLE" << std::endl;
-                return VM_UNKNOWN_DATA_TYPE;
-            }
-    }
-    return VM_SUCCES;
-}
-
-//TODO
-// int VM::print(const std::string &variable)
-// {
     
-// }
 
-int VM::print(const int &location)
+}
+
+VAR_PAIR VM::storeChar(const char &value, const int &location)
 {
-    char type = this->memory->getStackValueType(location);
-
-    switch(type)
+    int result;
+    if ( (result = this->memory->moveStackPointer(location)) == OUT_OF_STACK_MEMORY)
     {
-        case 'i':
-            std::cout << this->memory->getStackValue_INT(location) << std::endl; 
-            break;
-        case 'f':
-            std::cout << this->memory->getStackValue_FLOAT(location) << std::endl;
-            break;
-        case 'c':
-            std::cout << this->memory->getStackValue_CHAR(location) << std::endl;
-            break;
+        std::cerr << "VM ERROR: MEMORY LOCATION INVALID" << std::endl;
+        return VAR_PAIR{VM_FAILED_TO_STORE_DATA, 'n'};
     }
-    return VM_SUCCES;
+
+    if ( (result = this->memory->changeValueAtCurrentLocation('c', value) ) != STACK_OPERATION_SUCCES )
+    {
+        std::cerr << "VM ERROR: FAILED TO STORE CHAR" << std::endl;
+        return VAR_PAIR{result, 'n'};
+    }
+    return VAR_PAIR{location, 'c'};
+    
+}
+
+VAR_PAIR VM::storeFloat(const float &value, const int &location)
+{
+    int result;
+    if ( (result = this->memory->moveStackPointer(location)) == OUT_OF_STACK_MEMORY)
+    {
+        std::cerr << "VM ERROR: MEMORY LOCATION INVALID" << std::endl;
+        return VAR_PAIR{VM_FAILED_TO_STORE_DATA, 'n'};
+    }
+
+    if ( (result = this->memory->changeValueAtCurrentLocation('f', value) ) != STACK_OPERATION_SUCCES )
+    {
+        std::cerr << "VM ERROR: FAILED TO STORE FLOAT" << std::endl;
+        return VAR_PAIR{result, 'n'};
+    }
+    return VAR_PAIR{location, 'f'};
+    
+}
+
+VAR_PAIR VM::storeInt(const int &value, const int &location)
+{
+    int result;
+    if (this->memory->moveStackPointer(location) == OUT_OF_STACK_MEMORY)
+    {
+        std::cerr << "VM ERROR: MEMORY LOCATION INVALID" << std::endl;
+        return VAR_PAIR{VM_FAILED_TO_STORE_DATA, 'n'};
+    }
+
+    if (this->memory->changeValueAtCurrentLocation('i', value) != STACK_OPERATION_SUCCES )
+    {
+        std::cerr << "VM ERROR: FAILED TO STORE INT" << std::endl;
+        return VAR_PAIR{result, 'n'};
+    }
+    return VAR_PAIR{location, 'i'};
+    
+}
+
+char VM::retrieveChar(const int &location)
+{
+    if (this->memory->moveStackPointer(location) == OUT_OF_STACK_MEMORY)
+    {
+        return VM_FAILED_TO_RETREIVE;
+    }
+
+    if (this->memory->getStackValueType() != 'c' && this->memory->getStackValueType() != 't')
+    {
+        std::cerr << "VM ERROR: CANNOT RETRIEVE CHAR FROM BLOCK WITH ANOTHER DATA TYPE" << std::endl;
+        return VM_FAILED_TO_RETREIVE;
+    }
+
+    return this->memory->getStackValue_CHAR(location);
+
+}
+
+float VM::retrieveFloat(const int &location)
+{
+    if (this->memory->moveStackPointer(location) == OUT_OF_STACK_MEMORY)
+    {
+        return VM_FAILED_TO_RETREIVE;
+    }
+
+    if (this->memory->getStackValueType() != 'f' && this->memory->getStackValueType() != 't')
+    {
+        std::cerr << "VM ERROR: CANNOT RETRIEVE FLOAT FROM BLOCK WITH ANOTHER DATA TYPE" << std::endl;
+        return VM_FAILED_TO_RETREIVE;
+    }
+
+    return this->memory->getStackValue_FLOAT(location);
+
+}
+
+int VM::retrieveInt(const int &location)
+{
+    if (this->memory->moveStackPointer(location) == OUT_OF_STACK_MEMORY)
+    {
+        return VM_FAILED_TO_RETREIVE;
+    }
+
+    if (this->memory->getStackValueType() != 'i' && this->memory->getStackValueType() != 't')
+    {
+        std::cerr << "VM ERROR: CANNOT RETRIEVE INT FROM BLOCK WITH ANOTHER DATA TYPE" << std::endl;
+        return VM_FAILED_TO_RETREIVE;
+    }
+
+    return this->memory->getStackValue_INT(location);
+
+}
+
+uint32_t VM::getStackPointerLocation()
+{
+    return this->memory->getCurrentLocation();
+}
+
+void VM::getVMInfo()
+{
+    std::cout << "======== INFORMATION ========" << std::endl;
+    this->memory->getStackInfo();
+    std::cout << "VM version: 1.0" << std::endl;
+    std::cout << "=============================" << std::endl;
 }
