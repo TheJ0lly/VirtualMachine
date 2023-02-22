@@ -16,15 +16,8 @@ VMC main.lion -m -o
 
 int main(int argc, char **argv)
 {
-    std::string OutputPath = std::filesystem::current_path();
-    std::string CFilePath;
-
-    std::vector<std::string> ops;
-
-    VM vm;
-
-
-    
+    std::string sex = "Muie";
+    std::cout << sex << std::endl;
 }
 
 
