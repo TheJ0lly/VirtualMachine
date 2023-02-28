@@ -10,7 +10,8 @@
 
 /*
 
-VMC main.lion -m -o
+Add checking for existing variables reassignment
+Modify the print for arrays more elegantly
 
 */
 
@@ -18,14 +19,14 @@ VMC main.lion -m -o
 int main(int argc, char **argv)
 {
     VM vm;
-    ARRAY a;
 
-    vm.appendChar('c', a);
-    vm.appendChar('a', a);
-    vm.appendInt(102, a);
-    vm.appendFloat(102.321, a);
+    VAR a;
+
+    vm.storeChar('c', a);
+    vm.storeChar('b', a);
 
     vm.print(a);
+    std::cout << vm.retrieveChar(0) << std::endl;
 
 }
 
