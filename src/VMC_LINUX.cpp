@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+
 /*
 
 VMC main.lion -m -o
@@ -16,8 +17,16 @@ VMC main.lion -m -o
 
 int main(int argc, char **argv)
 {
-    std::string sex = "Penis";
-    std::cout << sex << std::endl;
+    VM vm;
+    ARRAY a;
+
+    vm.appendChar('c', a);
+    vm.appendChar('a', a);
+    vm.appendInt(102, a);
+    vm.appendFloat(102.321, a);
+
+    vm.print(a);
+
 }
 
 
