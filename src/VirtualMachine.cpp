@@ -58,6 +58,14 @@ void VM::getVMInfo()
 
 int VM::storeChar(const char &value, VAR &var)
 {
+
+    if (var.second != 'n')
+    {
+        this->memory->moveStackPointer(var.first);
+        this->memory->changeValueAtCurrentLocation('n');
+        this->deallocateVariable(var);
+    }
+
     for (uint32_t i = 0; i <= this->memory->getEOS(); i++)
     {
         if (this->memory->getStackValueType(i) == 'n')
@@ -76,6 +84,13 @@ int VM::storeChar(const char &value, VAR &var)
 
 int VM::storeFloat(const float &value, VAR &var)
 {
+    if (var.second != 'n')
+    {
+        this->memory->moveStackPointer(var.first);
+        this->memory->changeValueAtCurrentLocation('n');
+        this->deallocateVariable(var);
+    }
+
     for (uint32_t i = 0; i <= this->memory->getEOS(); i++)
     {
         if (this->memory->getStackValueType(i) == 'n')
@@ -94,6 +109,13 @@ int VM::storeFloat(const float &value, VAR &var)
 
 int VM::storeInt(const int &value, VAR &var)
 {
+    if (var.second != 'n')
+    {
+        this->memory->moveStackPointer(var.first);
+        this->memory->changeValueAtCurrentLocation('n');
+        this->deallocateVariable(var);
+    }
+
     for (uint32_t i = 0; i <= this->memory->getEOS(); i++)
     {
         if (this->memory->getStackValueType(i) == 'n')
