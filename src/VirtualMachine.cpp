@@ -63,7 +63,7 @@ int VM::storeChar(const char &value, VAR &var)
     {
         this->memory->moveStackPointer(var.first);
         this->memory->changeValueAtCurrentLocation('n');
-        this->deallocateVariable(var);
+        this->freeVariable(var);
     }
 
     for (uint32_t i = 0; i <= this->memory->getEOS(); i++)
@@ -88,7 +88,7 @@ int VM::storeFloat(const float &value, VAR &var)
     {
         this->memory->moveStackPointer(var.first);
         this->memory->changeValueAtCurrentLocation('n');
-        this->deallocateVariable(var);
+        this->freeVariable(var);
     }
 
     for (uint32_t i = 0; i <= this->memory->getEOS(); i++)
@@ -113,7 +113,7 @@ int VM::storeInt(const int &value, VAR &var)
     {
         this->memory->moveStackPointer(var.first);
         this->memory->changeValueAtCurrentLocation('n');
-        this->deallocateVariable(var);
+        this->freeVariable(var);
     }
 
     for (uint32_t i = 0; i <= this->memory->getEOS(); i++)
@@ -183,7 +183,7 @@ int VM::retrieveInt(const int &location)
 
 }
 
-void VM::deallocateVariable(VAR &var)
+void VM::freeVariable(VAR &var)
 {
     var.first = -1;
     var.second = 'n';
@@ -195,9 +195,12 @@ void VM::deallocateVariable(VAR &var)
 
 
 //==================== ARRAY ====================
+
 int VM::appendChar(const char &value, ARRAY &arr)
 {
     VAR temp;
+    temp.first = -1;
+    temp.second = 'n';
     if (this->storeChar(value, temp) == VM_FAILED_STORE_CHAR )
     {
         std::cerr << "VM ERROR: CANNOT ALLOCATE SPACE FOR CHAR" << std::endl;
@@ -211,6 +214,8 @@ int VM::appendChar(const char &value, ARRAY &arr)
 int VM::appendInt(const int &value, ARRAY &arr)
 {
     VAR temp;
+    temp.first = -1;
+    temp.second = 'n';
     if (this->storeInt(value, temp) == VM_FAILED_STORE_INT)
     {
         std::cerr << "VM ERROR: CANNOT ALLOCATE SPACE FOR INT" << std::endl;
@@ -225,6 +230,8 @@ int VM::appendInt(const int &value, ARRAY &arr)
 int VM::appendFloat(const float &value, ARRAY &arr)
 {
     VAR temp;
+    temp.first = -1;
+    temp.second = 'n';
     if (this->storeFloat(value, temp) == VM_FAILED_STORE_FLOAT)
     {
         std::cerr << "VM ERROR: CANNOT ALLOCATE SPACE FOR FLOAT" << std::endl;
@@ -235,7 +242,27 @@ int VM::appendFloat(const float &value, ARRAY &arr)
     return VM_SUCCES;
 }
 
-int VM::at(ARRAY &arr, VAR &var, const int &index)
+int VM::removeElement(const int &location, ARRAY &arr)
+{
+    if (location < 0)
+    {
+        std::cerr << "ARRAY ERROR: INDEX BELOW 0" << std::endl;
+        return VM_FAILED_REMOVE;
+    }
+
+    if (location > (int)arr.size() - 1)
+    {
+        std::cerr << "ARRAY ERROR: EXCEEDING SIZE OF THE ARRAY" << std::endl;
+        return VM_FAILED_REMOVE;
+    }
+
+    arr.erase(arr.begin() + location);
+    return VM_SUCCES;
+
+
+}
+
+int VM::at(const int &index, ARRAY &arr, VAR &var)
 {
     if (index < 0)
     {
@@ -258,6 +285,7 @@ void VM::clearArray(ARRAY &arr)
 {
     arr.clear();
 }
+
 //===============================================
 
 
@@ -294,31 +322,78 @@ int VM::print(const VAR &var, bool endline)
     return STDLIB_SUCCESS;
 }
 
-int VM::print(const ARRAY &arr)
+int VM::print(const ARRAY &arr, bool asString)
 {
-    std::cout << "< index | value | type >" << std::endl;    
-    for (int i = 0; i < (int)arr.size(); i++)
+    if (!asString)
     {
-        char type = this->memory->getStackValueType(arr[i].first);
-        std::cout << "< " << i << " | ";
-
-        switch(type)
+        std::cout << "ARRAY: ";
+        for (int i = 0; i < (int)arr.size(); i++)
         {
-            case 'i':
-                std::cout << this->retrieveInt(arr[i].first) << " | ";
-                break;
-            case 'f':
-                std::cout << this->retrieveFloat(arr[i].first) << " | ";
-                break;            
-            case 'c':
-                std::cout << this->retrieveChar(arr[i].first) << " | ";
-                break;
-            default:
-                std::cerr << "VM ERROR: ACCESSING BLOCK WITH UNKNOWN DATA TYPE" << std::endl;
-                return VM_UNKNOWN_DATA_TYPE;
-        }
+            char type = this->memory->getStackValueType(arr[i].first);
+            switch(type)
+            {
+                case 'i':
+                    std::cout << this->retrieveInt(arr[i].first);
+                    break;
+                case 'f':
+                    std::cout << this->retrieveFloat(arr[i].first);
+                    break;            
+                case 'c':
+                    std::cout << "'" <<this->retrieveChar(arr[i].first) << "'";
+                    break;
+                default:
+                    std::cerr << "VM ERROR: ACCESSING BLOCK WITH UNKNOWN DATA TYPE" << std::endl;
+                    return VM_UNKNOWN_DATA_TYPE;
+            }
 
-        std::cout << type << " >" << std::endl;
+            if (i != (int)arr.size() - 1)
+            {
+                std::cout << ", ";
+            }
+            else
+            {
+                std::cout << std::endl;
+            }
+        }
     }
+    else
+    {
+        std::cout << "STRING: ";
+        for (int i = 0; i < (int)arr.size(); i++)
+        {
+            char type = this->memory->getStackValueType(arr[i].first);
+            switch(type)
+            {
+                case 'i':
+                    std::cout << this->retrieveInt(arr[i].first);
+                    break;
+                case 'f':
+                    std::cout << this->retrieveFloat(arr[i].first);
+                    break;            
+                case 'c':
+                    std::cout << this->retrieveChar(arr[i].first);
+                    break;
+                default:
+                    std::cerr << "VM ERROR: ACCESSING BLOCK WITH UNKNOWN DATA TYPE" << std::endl;
+                    return VM_UNKNOWN_DATA_TYPE;
+            }
+
+            if (i == (int)arr.size() - 1)
+            {
+                std::cout << std::endl;
+            }
+        }
+    }
+
+
+    
+    return VM_SUCCES;
+}
+
+int VM::print(const std::string &string, bool endline)
+{
+    std::cout << string;
+    if (endline)
+        std::cout << std::endl;
     return VM_SUCCES;
 }

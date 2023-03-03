@@ -1,16 +1,7 @@
 #include "../include/VM/VirtualMachine.hpp"
-#include <fstream>
-
-#include <filesystem>
-
-
-#include <stdlib.h>
-#include <unistd.h>
-
 
 /*
 
-Add checking for existing variables reassignment
 Modify the print for arrays more elegantly
 
 */
@@ -20,14 +11,26 @@ int main(int argc, char **argv)
 {
     VM vm;
 
-    VAR a;
+    ARRAY a;
+    vm.appendChar('T', a);
+    vm.appendChar('E', a);
+    vm.appendChar('S', a);
+    vm.appendChar('A', a);
+    vm.appendChar('T', a);
 
-    vm.storeChar('c', a);
-    vm.storeChar('b', a);
-
+    vm.removeElement(3, a);
+    vm.print(a, true);
     vm.print(a);
-    std::cout << vm.retrieveChar(0) << std::endl;
 
+    vm.print("===============================");
+
+    ARRAY b;
+    vm.appendChar('A', b);
+    vm.appendInt('1', b);
+    vm.appendFloat('a', b);
+
+    vm.print(b, true);
+    vm.print(b);
 }
 
 
