@@ -129,6 +129,10 @@ Error vm_execute_instruction(VM *vm, Instruction inst) {
     dbg_print_instruction(vm, inst);
     #endif
 
+    if (vm->ip >= vm->insts_cap) {
+        return ERR_INVALID_MEM_ACCESS;
+    }
+
     switch (inst.op) {
         case MV:
         {

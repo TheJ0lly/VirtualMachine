@@ -24,7 +24,6 @@ int main() {
         OP_LDI(R2, 2),
         
         OP_CMP(R2, R3),
-        OP_HALT,
     };
 
     err = vm_load_program(&vm, program, 8);
