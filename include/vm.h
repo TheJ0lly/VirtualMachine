@@ -35,7 +35,7 @@ typedef struct Instruction {
 #define OP_ST(reg, lo) {.op=ST, .reg1=(reg), .loc=(lo)}
 #define OP_STI(reg, lo) {.op=STI, .reg1=(reg), .loc=(lo)}
 #define OP_CMP(r1, r2) {.op=CMP, .reg1=(r1), .reg2=(r2)}
-#define OP_JMP(lo) {.op=MV, .loc=(lo)}
+#define OP_JMP(lo) {.op=JMP, .loc=(lo)}
 #define OP_HALT {.op=HALT}
 
 typedef enum {

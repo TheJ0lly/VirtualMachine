@@ -15,6 +15,7 @@ int main() {
     Instruction program[] = {
         OP_MV(R1, 5),
         OP_ST(R1, 2),
+        OP_JMP(7),
 
 
         OP_MV(R3, 69),
@@ -23,7 +24,6 @@ int main() {
         OP_LDI(R2, 2),
         
         OP_CMP(R2, R3),
-        OP_JMP(7),
         OP_HALT,
     };
 
