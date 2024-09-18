@@ -6,7 +6,7 @@
 void dbg_print_memory(VM *vm) {
     printf("===== VM MEMORY =====\n");
     uint16_t i = 0;
-    while (i < vm->ip_start) {
+    while (i < vm->mem_cap) {
         if (vm->memory[i] != 0) {
             printf("%hu: %hu\n", i, vm->memory[i]);
         }
@@ -24,50 +24,34 @@ void dbg_print_registers(VM *vm) {
     printf("RBool: %d\n", vm->reg[RBool]);
 }
 
-void dbg_print_instruction(VM *vm, uint16_t inst) {
-    uint16_t op = inst >> 12;
-    uint16_t reg;
-    uint16_t loc;
-
-    switch (op) {
+void dbg_print_instruction(VM *vm, Instruction inst) {
+    switch (inst.op) {
         case MV:
-            reg = (inst >> 9) & 0x7;
-            loc = inst & 0x1FF;
-            printf("OP: MV\n   REG: %hu\n   VAL: %hu\n", reg, loc);
+            printf("OP: MV\n   REG: %hu\n   VAL: %hu\n", inst.reg1, inst.reg2);
             break;
         case LD:
-            reg = (inst >> 9) & 0x7;
-            loc = inst & 0x1FF;
-            printf("OP: LD\n   REG: %hu\n   LOC: %hu\n", reg, loc);
+            printf("OP: LD\n   REG: %hu\n   LOC: %hu\n", inst.reg1, inst.loc);
             break;
         case LDI:
-            reg = (inst >> 9) & 0x7;
-            loc = inst & 0x1FF;
             {
-                uint16_t newloc = vm->memory[loc];
+                uint16_t newloc = vm->memory[inst.loc];
                 uint16_t value = vm->memory[newloc];
-                printf("OP: LDI\n   REG: %hu\n   LOC1: %hu\n   LOC2: %hu\n   VAL: %hu\n", reg, loc, newloc, value);
+                printf("OP: LDI\n   REG: %hu\n   LOC1: %hu\n   LOC2: %hu\n   VAL: %hu\n", inst.reg1, inst.loc, newloc, value);
             }
             break;
         case ST:
-            reg = (inst >> 9) & 0x7;
-            loc = inst & 0x1FF;
-            printf("OP: ST\n   REG: %hu\n   LOC: %hu\n", reg, loc);
+            printf("OP: ST\n   REG: %hu\n   LOC: %hu\n", inst.reg1, inst.loc);
             break;
         case STI:
-            reg = (inst >> 9) & 0x7;
-            loc = inst & 0x1FF;
             {
-                uint16_t newloc = vm->memory[loc];
-                printf("OP: STI\n   REG: %hu\n   LOC1: %hu\n   LOC2: %hu\n   REG_VAL: %hu\n", reg, loc, newloc, vm->reg[reg]);
+                uint16_t newloc = vm->memory[inst.loc];
+                printf("OP: STI\n   REG: %hu\n   POINTER: %hu\n   DEST: %hu\n   REG_VAL: %hu\n", inst.reg1, inst.loc, newloc, vm->reg[inst.reg1]);
             }
             break;
         case CMP:
             {
-                reg = (inst >> 9) & 0x7;
-                loc = (inst >> 6) & 0x7;
-                uint16_t r1 = vm->reg[reg];
-                uint16_t r2 = vm->reg[loc];
+                uint16_t r1 = vm->reg[inst.reg1];
+                uint16_t r2 = vm->reg[inst.reg2];
                 uint16_t rbool;
                 if (r1 < r2)
                     rbool = 2;
@@ -81,24 +65,23 @@ void dbg_print_instruction(VM *vm, uint16_t inst) {
             break;
         case JMP:
             {
-                loc = inst & 0x0FFF;
-                printf("OP: JMP\n   LOC: %hu\n", loc);
+                printf("OP: JMP\n   LOC: %hu\n", inst.loc);
             }
             break;
         case HALT:
             printf("OP: HALT\n");
             break;
         default:
-            printf("UNKNOWN OPERATION: %hu\n", op);
+            printf("UNKNOWN OPERATION: %hu\n", inst.op);
             break;
     }
 
 }
 
-Error init_vm(VM *vm, uint16_t memory, uint16_t inst_startpoint, uint16_t stack_startpoint) {
-    vm->ip = inst_startpoint;
-    vm->ip_start = inst_startpoint;
-    vm->dp = stack_startpoint;
+Error init_vm(VM *vm, uint16_t memory) {
+    vm->ip = DEFAULT_IP_STARTPOINT;
+    vm->insts_cap = memory;
+    vm->mem_cap = memory;
     vm->running = true;
 
 
@@ -111,6 +94,12 @@ Error init_vm(VM *vm, uint16_t memory, uint16_t inst_startpoint, uint16_t stack_
     vm->memory = calloc(memory, sizeof(uint16_t));
 
     if (vm->memory == NULL) {
+        return ERR_FAILED_INIT_VM;
+    }
+
+    vm->insts = calloc(memory, sizeof(Instruction));
+
+    if (vm->insts == NULL) {
         return ERR_FAILED_INIT_VM;
     }
 
@@ -135,115 +124,95 @@ Error mem_read(VM *vm, uint16_t addr, uint16_t *reg, bool direct) {
     return ERR_OK;
 }
 
-Error vm_execute_instruction(VM *vm, uint16_t inst) {
+Error vm_execute_instruction(VM *vm, Instruction inst) {
     #ifdef DEBUG
     dbg_print_instruction(vm, inst);
     #endif
 
-    uint16_t op = inst >> 12;
-    switch (op) {
+    switch (inst.op) {
         case MV:
         {
-            uint16_t reg = (inst >> 9) & 0x7;
-
-            if (reg > REGISTER_LEN) {
+            if (inst.reg1 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
 
-            uint16_t value = inst & 0x1FF;
-
-            vm->reg[reg] = value;
+            vm->reg[inst.reg1] = inst.reg2;
         }
         break;
         
         case LD:
         {
-            uint16_t reg = (inst >> 9) & 0x7;
-
-            if (reg > REGISTER_LEN) {
+            if (inst.reg1 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
 
-            uint16_t loc = inst & 0x1FF;
-
-            if (loc >= vm->ip_start) {
+            if (inst.loc >= vm->mem_cap) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            mem_read(vm, loc, &vm->reg[reg], true);
+            mem_read(vm, inst.loc, &vm->reg[inst.reg1], true);
         }
         break;
 
         case LDI:
         {
-            uint16_t reg = (inst >> 9) & 0x7;
-
-            if (reg > REGISTER_LEN) {
+            if (inst.reg1 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
 
-            uint16_t loc = inst & 0x1FF;
-
-            if (loc >= vm->ip_start) {
+            if (inst.loc >= vm->mem_cap) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            mem_read(vm, loc, &vm->reg[reg], false);
+            mem_read(vm, inst.loc, &vm->reg[inst.reg1], false);
         }
         break;
 
         case ST:
         {
-            uint16_t reg = (inst >> 9) & 0x7;
-
-            if (reg > REGISTER_LEN) {
+            if (inst.reg1 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
 
-            uint16_t loc = inst & 0x1FF;
-
-            if (loc >= vm->ip_start) {
+            if (inst.loc >= vm->mem_cap) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            mem_write(vm, loc, vm->reg[reg], true);
+            mem_write(vm, inst.loc, vm->reg[inst.reg1], true);
         }
         break;
 
         case STI:
         {
-            uint16_t reg = (inst >> 9) & 0x7;
-
-            if (reg > REGISTER_LEN) {
+            if (inst.reg1 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
 
-            uint16_t loc = inst & 0x1FF;
-
-            if (loc >= vm->ip_start) {
+            if (inst.loc >= vm->mem_cap) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            mem_write(vm, loc, vm->reg[reg], false);
+            mem_write(vm, inst.loc, vm->reg[inst.reg1], false);
         }
         break;
 
         case CMP:
         {
-            uint16_t reg1 = (inst >> 9) & 0x7;
-            if (reg1 > REGISTER_LEN) {
+            if (inst.reg1 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
-            uint16_t reg2 = (inst >> 6) & 0x7;
-            if (reg2 > REGISTER_LEN) {
+            uint16_t reg1 = vm->reg[inst.reg1];
+            
+            if (inst.reg2 > REGISTER_LEN) {
                 return ERR_INVALID_REGISTER;
             }
+            uint16_t reg2 = vm->reg[inst.reg2];
 
 
 
-            if (vm->reg[reg1] < vm->reg[reg2]) {
+            if (reg1 < reg2) {
                 vm->reg[RBool] = 2;
-            } else if (vm->reg[reg1] == vm->reg[reg2]) {
+            } else if (reg1 == reg2) {
                 vm->reg[RBool] = 0;
             } else {
                 vm->reg[RBool] = 1;
@@ -253,8 +222,11 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
 
         case JMP:
         {
-            uint16_t loc = inst & 0x0FFF;
-            vm->ip = vm->ip_start + loc - 1;
+            if (inst.loc >= vm->insts_cap) {
+                return ERR_INVALID_MEM_ACCESS;
+            }
+
+            vm->ip = inst.loc - 1; 
         }
         break;
 
@@ -268,14 +240,15 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
     return ERR_OK;
 }
 
-Error vm_load_program(VM *vm, uint16_t *program, uint16_t icount) {
-    Error err;
-    for (int i = 0; i < icount; i++) {
-        err = mem_write(vm, vm->ip + i, program[i], true);
-        if (err != ERR_OK) {
-            return err;
-        }
+Error vm_load_program(VM *vm, Instruction *program, uint16_t icount) {
+    if (icount >= vm->insts_cap) {
+        return ERR_FAILED_LOAD_PROGRAM;
     }
+
+    for (int i = 0; i < icount && i < vm->insts_cap; i++) {
+        vm->insts[i] = program[i];
+    }
+
     return ERR_OK;
 }
 
@@ -283,9 +256,10 @@ Error vm_execute_program(VM *vm) {
     #ifdef DEBUG
     printf("===== PROGRAM INSTRUCTIONS =====\n");
     #endif
+
     Error err;
     while (vm->running) {
-        err = vm_execute_instruction(vm, vm->memory[vm->ip]);
+        err = vm_execute_instruction(vm, vm->insts[vm->ip]);
 
         if (err != ERR_OK) {
             return err;

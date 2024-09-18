@@ -5,14 +5,14 @@
 int main() {
     VM vm = {0};
 
-    Error err = init_vm(&vm, DEFAULT_MEM_SPACE, DEFAULT_IP_STARTPOINT, DEFAULT_DATA_STARTPOINT);
+    Error err = init_vm(&vm, DEFAULT_MEM_SPACE);
 
     if (err != ERR_OK) {
         printf("ERROR: %s\nExit code: -%d\n", error_as_string(err), err);
         return err;
     }
 
-    uint16_t program[] = {
+    Instruction program[] = {
         OP_MV(R1, 5),
         OP_ST(R1, 2),
 
@@ -39,7 +39,6 @@ int main() {
         printf("ERROR: %s\nExit code: -%d\n", error_as_string(err), err);
         return err;
     }
-
 
     dbg_print_memory(&vm);
     dbg_print_registers(&vm);

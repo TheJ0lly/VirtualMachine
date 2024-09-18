@@ -14,6 +14,7 @@ typedef enum {
 
     ERR_FAILED_LOAD_PROGRAM,
 
+    ERR_INVALID_JUMP_ADDR,
     ERR_WRITE_ERROR,
     ERR_READ_ERROR,
 } Error;

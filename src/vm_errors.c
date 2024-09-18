@@ -13,6 +13,8 @@ char* error_as_string(Error err) {
         return "ERR_INVALID_MEM_ACCESS";
     case ERR_FAILED_LOAD_PROGRAM:
         return "ERR_FAILED_LOAD_PROGRAM";
+    case ERR_INVALID_JUMP_ADDR:
+        return "ERR_INVALID_JUMP_ADDR";
     case ERR_WRITE_ERROR:
         return "ERR_WRITE_ERROR";
     case ERR_READ_ERROR:

@@ -7,63 +7,36 @@
 #include "vm_errors.h"
 
 #define DEFAULT_MEM_SPACE UINT16_MAX
-#define DEFAULT_IP_STARTPOINT 0xC350
-#define DEFAULT_DATA_STARTPOINT 0x0
-
-#define DEBUG
+#define DEFAULT_IP_STARTPOINT 0x0
+#define DEFAULT_DATA_STARTPOINT 0x1000
 
 
-// Memory layout of an instruction
-/*
-4 bits - OP code
-12 bits - parameters
-*/
 typedef enum {
-    /*
-    3 bits - Register
-    9 bits - Value
-    */
     MV = 0,
-
-    /*
-    3 bits - Register
-    9 bits - Memory location
-    */
     LD,
     LDI,
-
-    /*
-    3 bits - Register
-    9 bits - Memory location
-    */
     ST,
     STI,
-
-    /*
-    3 bits - Reg
-    3 bits - Reg
-    */
     CMP,
-
-    /*
-    12 bits - Memory location
-    */
     JMP,
-
-    /*
-    Nothing. It stops the vm.
-    */
     HALT,
-} Operations;
+} Operation;
 
-#define OP_MV(reg, val) (((MV << 3) | (reg)) << 9) | (val)
-#define OP_LD(reg, loc) (((LD << 3) | (reg)) << 9) | (loc)
-#define OP_LDI(reg, loc) (((LDI << 3) | (reg)) << 9) | (loc)
-#define OP_ST(reg, loc) (((ST << 3) | (reg)) << 9) | (loc)
-#define OP_STI(reg, loc) (((STI << 3) | (reg)) << 9) | (loc)
-#define OP_CMP(reg1, reg2) ((((CMP << 3) | (reg1) ) << 3) | (reg2)) << 6
-#define OP_JMP(loc) (JMP << 12) | (loc)
-#define OP_HALT (HALT << 12)
+typedef struct Instruction {
+    Operation op;
+    uint8_t reg1;
+    uint8_t reg2;
+    uint16_t loc;
+} Instruction;
+
+#define OP_MV(reg, val) {.op=MV, .reg1=(reg), .reg2=(val)}
+#define OP_LD(reg, lo) {.op=LD, .reg1=(reg), .loc=(lo)}
+#define OP_LDI(reg, lo) {.op=LDI, .reg1=(reg), .loc=(lo)}
+#define OP_ST(reg, lo) {.op=ST, .reg1=(reg), .loc=(lo)}
+#define OP_STI(reg, lo) {.op=STI, .reg1=(reg), .loc=(lo)}
+#define OP_CMP(r1, r2) {.op=CMP, .reg1=(r1), .reg2=(r2)}
+#define OP_JMP(lo) {.op=MV, .loc=(lo)}
+#define OP_HALT {.op=HALT}
 
 typedef enum {
     /*
@@ -90,19 +63,13 @@ typedef enum {
 } Register;
 
 typedef struct {
+    Instruction *insts;
+    uint16_t insts_cap;
     uint16_t *memory;
+    uint16_t mem_cap;
     uint16_t *reg;
     
     uint16_t ip;
-
-    /*
-    INST_START:
-        - is a constant that is used to store 
-          the first memory location of the instruction space.
-    */
-    uint16_t ip_start;
-
-    uint16_t dp;
 
     bool running;
 } VM;
@@ -111,16 +78,15 @@ void dbg_print_all_instructions(VM *vm);
 void dbg_print_memory(VM *vm);
 void dbg_print_registers(VM *vm);
 
-void dbg_print_instruction(VM *vm, uint16_t inst);
+void dbg_print_instruction(VM *vm, Instruction inst);
 
-Error init_vm(VM *vm, uint16_t memory, uint16_t inst_startpoint, uint16_t data_startpoint);
+Error init_vm(VM *vm, uint16_t memory);
 
 Error mem_write(VM *vm, uint16_t addr, uint16_t val, bool direct);
 Error mem_read(VM *vm, uint16_t addr, uint16_t *reg, bool direct);
 
-Error vm_execute_instruction(VM *vm, uint16_t inst);
-
-Error vm_load_program(VM *vm, uint16_t *program, uint16_t icount);
+Error vm_execute_instruction(VM *vm, Instruction inst);
+Error vm_load_program(VM *vm, Instruction *program, uint16_t icount);
 Error vm_execute_program(VM *vm);
 
 
