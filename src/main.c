@@ -16,16 +16,18 @@ int main() {
         OP_MV(R1, 5),
         OP_ST(R1, 2),
 
+
         OP_MV(R3, 69),
         OP_STI(R3, 2),
         
         OP_LDI(R2, 2),
         
         OP_CMP(R2, R3),
+        OP_JMP(7),
         OP_HALT,
     };
 
-    err = vm_load_program(&vm, program, 7);
+    err = vm_load_program(&vm, program, 8);
     if (err != ERR_OK) {
         printf("ERROR: %s\nExit code: -%d\n", error_as_string(err), err);
         return err;

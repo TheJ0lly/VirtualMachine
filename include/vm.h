@@ -49,7 +49,6 @@ typedef enum {
     12 bits - Memory location
     */
     JMP,
-    JMPI,
 
     /*
     Nothing. It stops the vm.
@@ -62,7 +61,8 @@ typedef enum {
 #define OP_LDI(reg, loc) (((LDI << 3) | (reg)) << 9) | (loc)
 #define OP_ST(reg, loc) (((ST << 3) | (reg)) << 9) | (loc)
 #define OP_STI(reg, loc) (((STI << 3) | (reg)) << 9) | (loc)
-#define OP_CMP(reg1, reg2) ((((CMP << 3) | (reg1) ) << 3) | (reg2)) << 6 
+#define OP_CMP(reg1, reg2) ((((CMP << 3) | (reg1) ) << 3) | (reg2)) << 6
+#define OP_JMP(loc) (JMP << 12) | (loc)
 #define OP_HALT (HALT << 12)
 
 typedef enum {

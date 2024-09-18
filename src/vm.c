@@ -79,6 +79,12 @@ void dbg_print_instruction(VM *vm, uint16_t inst) {
                 printf("OP: CMP\n   REG1: %hu\n   REG2: %hu\n   CMP_VAL: %hu\n", r1, r2, rbool);
             }
             break;
+        case JMP:
+            {
+                loc = inst & 0x0FFF;
+                printf("OP: JMP\n   LOC: %hu\n", loc);
+            }
+            break;
         case HALT:
             printf("OP: HALT\n");
             break;
@@ -244,7 +250,14 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
             }
         }
         break;
-        
+
+        case JMP:
+        {
+            uint16_t loc = inst & 0x0FFF;
+            vm->ip = vm->ip_start + loc - 1;
+        }
+        break;
+
         case HALT:
         vm->running = false;
         break;
