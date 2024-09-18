@@ -40,6 +40,18 @@ typedef enum {
     STI,
 
     /*
+    3 bits - Reg
+    3 bits - Reg
+    */
+    CMP,
+
+    /*
+    12 bits - Memory location
+    */
+    JMP,
+    JMPI,
+
+    /*
     Nothing. It stops the vm.
     */
     HALT,
@@ -50,6 +62,7 @@ typedef enum {
 #define OP_LDI(reg, loc) (((LDI << 3) | (reg)) << 9) | (loc)
 #define OP_ST(reg, loc) (((ST << 3) | (reg)) << 9) | (loc)
 #define OP_STI(reg, loc) (((STI << 3) | (reg)) << 9) | (loc)
+#define OP_CMP(reg1, reg2) ((((CMP << 3) | (reg1) ) << 3) | (reg2)) << 6 
 #define OP_HALT (HALT << 12)
 
 typedef enum {
@@ -69,9 +82,9 @@ typedef enum {
 
     /* 
     Compare flag:
-        - 1, if the value on the right is bigger.
         - 0, if the values are equal.
-        - -1, if the value on the left is bigger.
+        - 1, if the value on the left is bigger.
+        - 2, if the value on the right is bigger.
     */
     RBool,
 } Register;

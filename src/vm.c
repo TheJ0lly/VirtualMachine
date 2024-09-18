@@ -21,6 +21,7 @@ void dbg_print_registers(VM *vm) {
         printf("R%d: %d\n", i, vm->reg[i]);
         i++;
     }
+    printf("RBool: %d\n", vm->reg[RBool]);
 }
 
 void dbg_print_instruction(VM *vm, uint16_t inst) {
@@ -59,6 +60,23 @@ void dbg_print_instruction(VM *vm, uint16_t inst) {
             {
                 uint16_t newloc = vm->memory[loc];
                 printf("OP: STI\n   REG: %hu\n   LOC1: %hu\n   LOC2: %hu\n   REG_VAL: %hu\n", reg, loc, newloc, vm->reg[reg]);
+            }
+            break;
+        case CMP:
+            {
+                reg = (inst >> 9) & 0x7;
+                loc = (inst >> 6) & 0x7;
+                uint16_t r1 = vm->reg[reg];
+                uint16_t r2 = vm->reg[loc];
+                uint16_t rbool;
+                if (r1 < r2)
+                    rbool = 2;
+                else if (r1 == r2)
+                    rbool = 0;
+                else
+                    rbool = 1;
+
+                printf("OP: CMP\n   REG1: %hu\n   REG2: %hu\n   CMP_VAL: %hu\n", r1, r2, rbool);
             }
             break;
         case HALT:
@@ -201,6 +219,29 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
             mem_read(vm, loc, &newloc);
 
             mem_write(vm, newloc, vm->reg[reg]);
+        }
+        break;
+
+        case CMP:
+        {
+            uint16_t reg1 = (inst >> 9) & 0x7;
+            if (reg1 > REGISTER_LEN) {
+                return ERR_INVALID_REGISTER;
+            }
+            uint16_t reg2 = (inst >> 6) & 0x7;
+            if (reg2 > REGISTER_LEN) {
+                return ERR_INVALID_REGISTER;
+            }
+
+
+
+            if (vm->reg[reg1] < vm->reg[reg2]) {
+                vm->reg[RBool] = 2;
+            } else if (vm->reg[reg1] == vm->reg[reg2]) {
+                vm->reg[RBool] = 0;
+            } else {
+                vm->reg[RBool] = 1;
+            }
         }
         break;
         
