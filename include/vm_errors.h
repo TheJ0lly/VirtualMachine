@@ -12,6 +12,8 @@ typedef enum {
 
     ERR_UNKNOWN_OP,
 
+    ERR_FAILED_LOAD_PROGRAM,
+
     ERR_WRITE_ERROR,
     ERR_READ_ERROR,
 } Error;

@@ -7,8 +7,11 @@
 #include "vm_errors.h"
 
 #define DEFAULT_MEM_SPACE UINT16_MAX
-#define DEFAULT_INST_STARTPOINT 0xC350
+#define DEFAULT_IP_STARTPOINT 0xC350
 #define DEFAULT_DATA_STARTPOINT 0x0
+
+#define DEBUG
+
 
 // Memory layout of an instruction
 /*
@@ -27,13 +30,27 @@ typedef enum {
     9 bits - Memory location
     */
     LD,
+    LDI,
 
     /*
     3 bits - Register
     9 bits - Memory location
     */
     ST,
+    STI,
+
+    /*
+    Nothing. It stops the vm.
+    */
+    HALT,
 } Operations;
+
+#define OP_MV(reg, val) (((MV << 3) | (reg)) << 9) | (val)
+#define OP_LD(reg, loc) (((LD << 3) | (reg)) << 9) | (loc)
+#define OP_LDI(reg, loc) (((LDI << 3) | (reg)) << 9) | (loc)
+#define OP_ST(reg, loc) (((ST << 3) | (reg)) << 9) | (loc)
+#define OP_STI(reg, loc) (((STI << 3) | (reg)) << 9) | (loc)
+#define OP_HALT (HALT << 12)
 
 typedef enum {
     /*
@@ -70,12 +87,18 @@ typedef struct {
         - is a constant that is used to store 
           the first memory location of the instruction space.
     */
-    uint16_t inst_start;
+    uint16_t ip_start;
 
     uint16_t dp;
 
     bool running;
 } VM;
+
+void dbg_print_all_instructions(VM *vm);
+void dbg_print_memory(VM *vm);
+void dbg_print_registers(VM *vm);
+
+void dbg_print_instruction(VM *vm, uint16_t inst);
 
 Error init_vm(VM *vm, uint16_t memory, uint16_t inst_startpoint, uint16_t data_startpoint);
 
@@ -83,6 +106,9 @@ Error mem_write(VM *vm, uint16_t addr, uint16_t val);
 Error mem_read(VM *vm, uint16_t addr, uint16_t *reg);
 
 Error vm_execute_instruction(VM *vm, uint16_t inst);
+
+Error vm_load_program(VM *vm, uint16_t *program, uint16_t icount);
+Error vm_execute_program(VM *vm);
 
 
 #endif

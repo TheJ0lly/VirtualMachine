@@ -5,7 +5,7 @@ def build():
     print("\033[32mVM built successfully\033[00m")
 
 def run():
-    print("Running VM...")
+    print("Running VM.\n")
     os.system("./bin/vm && rm ./bin/vm")
 
 

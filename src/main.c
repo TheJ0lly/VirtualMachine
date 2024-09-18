@@ -1,30 +1,40 @@
 #include <stdio.h>
 
 #include "../include/vm.h"
-#include "../include/vm_debug.h"
 
 int main() {
     VM vm = {0};
 
-    Error err = init_vm(&vm, DEFAULT_MEM_SPACE, DEFAULT_INST_STARTPOINT, DEFAULT_DATA_STARTPOINT);
+    Error err = init_vm(&vm, DEFAULT_MEM_SPACE, DEFAULT_IP_STARTPOINT, DEFAULT_DATA_STARTPOINT);
 
     if (err != ERR_OK) {
         printf("ERROR: %s\nExit code: -%d\n", error_as_string(err), err);
         return err;
     }
 
-    err = vm_execute_instruction(&vm, 0x419);
+    uint16_t program[] = {
+        OP_MV(R1, 5),
+        OP_ST(R1, 2),
+        OP_MV(R3, 69),
+        OP_STI(R3, 2),
+        OP_LDI(R2, 2),
+        OP_HALT,
+    };
+
+    err = vm_load_program(&vm, program, 6);
     if (err != ERR_OK) {
         printf("ERROR: %s\nExit code: -%d\n", error_as_string(err), err);
         return err;
     }
 
-    err = vm_execute_instruction(&vm, 0x2402);
+    err = vm_execute_program(&vm);
+
     if (err != ERR_OK) {
         printf("ERROR: %s\nExit code: -%d\n", error_as_string(err), err);
         return err;
     }
 
 
-    dbg_print_memory(&vm);    
+    dbg_print_memory(&vm);
+    dbg_print_registers(&vm);
 }
