@@ -115,8 +115,8 @@ void dbg_print_instruction(VM *vm, uint16_t inst);
 
 Error init_vm(VM *vm, uint16_t memory, uint16_t inst_startpoint, uint16_t data_startpoint);
 
-Error mem_write(VM *vm, uint16_t addr, uint16_t val);
-Error mem_read(VM *vm, uint16_t addr, uint16_t *reg);
+Error mem_write(VM *vm, uint16_t addr, uint16_t val, bool direct);
+Error mem_read(VM *vm, uint16_t addr, uint16_t *reg, bool direct);
 
 Error vm_execute_instruction(VM *vm, uint16_t inst);
 

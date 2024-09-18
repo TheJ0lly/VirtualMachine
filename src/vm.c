@@ -111,13 +111,21 @@ Error init_vm(VM *vm, uint16_t memory, uint16_t inst_startpoint, uint16_t stack_
     return ERR_OK;
 }
 
-Error mem_write(VM *vm, uint16_t addr, uint16_t val) {
-    vm->memory[addr] = val;
+Error mem_write(VM *vm, uint16_t addr, uint16_t val, bool direct) {
+    if (direct) {
+        vm->memory[addr] = val;
+    } else {
+        vm->memory[vm->memory[addr]] = val;
+    }
     return ERR_OK;
 }
 
-Error mem_read(VM *vm, uint16_t addr, uint16_t *reg) {
-    *reg = vm->memory[addr];
+Error mem_read(VM *vm, uint16_t addr, uint16_t *reg, bool direct) {
+    if (direct) {
+        *reg = vm->memory[addr];
+    } else {
+        *reg = vm->memory[vm->memory[addr]];
+    }
     return ERR_OK;
 }
 
@@ -156,7 +164,7 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            mem_read(vm, loc, &vm->reg[reg]);
+            mem_read(vm, loc, &vm->reg[reg], true);
         }
         break;
 
@@ -174,11 +182,7 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            uint16_t newloc;
-
-            mem_read(vm, loc, &newloc);
-
-            mem_read(vm, newloc, &vm->reg[reg]);
+            mem_read(vm, loc, &vm->reg[reg], false);
         }
         break;
 
@@ -196,7 +200,7 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            mem_write(vm, loc, vm->reg[reg]);
+            mem_write(vm, loc, vm->reg[reg], true);
         }
         break;
 
@@ -214,11 +218,7 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
                 return ERR_INVALID_MEM_ACCESS;
             }
 
-            uint16_t newloc;
-
-            mem_read(vm, loc, &newloc);
-
-            mem_write(vm, newloc, vm->reg[reg]);
+            mem_write(vm, loc, vm->reg[reg], false);
         }
         break;
 
@@ -258,7 +258,7 @@ Error vm_execute_instruction(VM *vm, uint16_t inst) {
 Error vm_load_program(VM *vm, uint16_t *program, uint16_t icount) {
     Error err;
     for (int i = 0; i < icount; i++) {
-        err = mem_write(vm, vm->ip + i, program[i]);
+        err = mem_write(vm, vm->ip + i, program[i], true);
         if (err != ERR_OK) {
             return err;
         }
