@@ -2,15 +2,11 @@
 #define _VM_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /*
 16 bit virtual machine
 
-Instruction:
-    0 0 0 0 | 0 0 ... 0 0
-    Op Code | at least 4 are parameters.
-
-    Meaning, an instruction may have, 1 byte(8 bits) 2 bytes(16 bits) or 4 bytes(32 bits)
 
 Memory layout:
     Addr
@@ -81,6 +77,8 @@ struct machine {
 
     // Stack pointer, which points to the top of the stack memory. DEFAULT AT 40000.
     uint16_t sp;
+
+    bool running;
 };
 
 /*
@@ -118,6 +116,50 @@ void push(struct machine *vm, uint16_t val);
 // Pop the top of the stack 16-bit value.
 uint16_t pop(struct machine *vm);
 
+/*
+    Instructions.
+
+    Instruction:
+    0 0 0 0 |  0 0 ... 0 0
+    Op Code | 28 bits for parameters.
+
+    Meaning, an instruction has 28 bits of parameters and each occupies at most 4 bytes.
+
+*/
+
+#define GET_BYTE_1(x) (uint8_t)(((x) & 0xFF000000) >> 24)
+#define GET_BYTE_2(x) (uint8_t)(((x) & 0x00FF0000) >> 16)
+#define GET_BYTE_3(x) (uint8_t)(((x) & 0x0000FF00) >> 8)
+#define GET_BYTE_4(x) (uint8_t)(((x) & 0x000000FF))
+
+enum Operation {
+    /*
+        25 bit - signals if the value comes from a register.
+               - 0 not a register
+               - 1 a register
+        if it comes from a register, the next 3 bits signal which register.
+
+        16 - 0 bits - the value
+    */
+    PUSH = 0,
+
+    /*
+        25 bit - signals if the value comes from a register.
+               - 0 not a register
+               - 1 a register
+        if it comes from a register, the next 3 bits signal which register.
+    */
+    POP,
+
+    /*
+        No parameters. Only halt.
+    */
+    HALT,
+};
+
+void load_instruction(struct machine *vm, uint32_t instruction);
+void parse_instruction(struct machine *vm, uint16_t addr);
+void execute_instruction(struct machine *vm);
 
 
 #endif

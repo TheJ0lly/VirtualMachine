@@ -29,6 +29,16 @@ void test_push_pop(struct machine *vm) {
     printf("sp: %d\noffset: %d\npopped value: %d\n\n", vm->sp, vm->sp - default_sp_start, pop(vm));
 }
 
+void test_push_instruction(struct machine *vm) {
+    printf("ip: %d\n", vm->ip);
+    load_instruction(vm, 0xF000F55);
+
+    printf("ip: %d\n", vm->ip);
+
+    load_instruction(vm, 0x1F000F55);
+    printf("ip: %d\n", vm->ip);
+}
+
 
 int main() {
     struct machine vm = {0};
@@ -36,5 +46,7 @@ int main() {
 
     // test_read_write(&vm);
 
-    test_push_pop(&vm);
+    // test_push_pop(&vm);
+
+    // test_push_instruction(&vm);
 }
