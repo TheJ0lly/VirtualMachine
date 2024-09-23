@@ -1,6 +1,9 @@
 #include "../include/vm.h"
 #include <malloc.h>
 
+/*
+    Constants
+*/
 const uint16_t default_ip_start = 0xC350;
 const uint16_t max_memory_allowed = UINT16_MAX;
 
