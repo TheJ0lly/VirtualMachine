@@ -37,6 +37,11 @@ void write2(struct machine *vm, uint16_t addr, uint16_t val) {
 }
 
 void push(struct machine *vm, uint16_t val) {
+    if (vm->sp + 1 == default_ip_start) {
+        vm->reg[RERROR] = STACK_OVERFLOW;
+        fprintf(stderr, "cannot push - entering instructions section (addr: %d)\n", vm->sp + 1);
+        return;
+    }
     vm->memory[++vm->sp] = val;
 }
 
@@ -44,6 +49,7 @@ uint16_t pop(struct machine *vm) {
     if (vm->sp == default_sp_start) {
         vm->reg[RERROR] = EMPTY_STACK;
         fprintf(stderr, "cannot pop - stack is empty (addr: %d)\n", vm->sp - 1);
+        return 0;
     }
     return vm->memory[vm->sp--];
 }

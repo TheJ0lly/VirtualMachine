@@ -43,7 +43,7 @@ Stack:
 enum Error {
     OK = 0,
     EMPTY_STACK,
-
+    STACK_OVERFLOW,
 };
 
 enum Register {
