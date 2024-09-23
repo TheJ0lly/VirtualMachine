@@ -120,8 +120,8 @@ uint16_t pop(struct machine *vm);
     Instructions.
 
     Instruction:
-    0 0 0 0 |  0 0 ... 0 0
-    Op Code | 28 bits for parameters.
+    0 0 0 0 0 0 0 0 | 0 0 0 0 ... 0 0
+        Op Code     | 24 bits for parameters.
 
     Meaning, an instruction has 28 bits of parameters and each occupies at most 4 bytes.
 
@@ -134,22 +134,139 @@ uint16_t pop(struct machine *vm);
 
 enum Operation {
     /*
-        25 bit - signals if the value comes from a register.
-               - 0 not a register
+        20 bit - signals if the value is 8 or 16 bits.
+            1 - 16 bits.
+            
+        24 bit - signals if the value comes from a register.
                - 1 a register
-        if it comes from a register, the next 3 bits signal which register.
-
-        16 - 0 bits - the value
+        23-21 bits - which register
+            OR
+        16 - 1 bits - the value
     */
     PUSH = 0,
 
     /*
-        25 bit - signals if the value comes from a register.
-               - 0 not a register
-               - 1 a register
-        if it comes from a register, the next 3 bits signal which register.
+        24 bit - signals if the value will go into a register.
+            - 1 a register
+        23-21 bits - which register
     */
     POP,
+
+    /*
+        24 bit - will signal that the value will come from a register.
+            - 1 a register
+        23-21 bits - which register.
+
+        16-1 bits - the value
+    */
+    MOV,
+
+    /*
+        24-22 bits - will signal which register.
+    */
+    INC,
+
+    /*
+        24-22 bits - will signal which register.
+    */
+    DEC,
+
+    /*
+        24-22 bits - will signal which register.
+    */
+    NEG,
+
+    /*
+        24-22 bits - will signal which register to add into.
+
+        20 bit     - will signal that we will fetch a value from another register.
+        19-17 bits - which register to get the value from.
+            OR
+        16-1 bits - the value to add.
+    */
+    ADD,
+
+    /*
+        24-22 bits - will signal which register to substract into.
+        
+        20 bit     - will signal that we will fetch a value from another register.
+        19-17 bits - which register to get the value from.
+            OR
+        16-1 bits - the value to substract.
+    */
+    SUB,
+
+    /*
+        24-22 bits - will signal which register to substract into.
+        
+        20 bit     - will signal that we will fetch a value from another register.
+        19-17 bits - which register to get the value from.
+            OR
+        16-1 bits - the value to substract.
+    */
+    MUL,
+
+    /*
+        24-22 bits - will signal which register to substract into.
+        
+        20 bit     - will signal that we will fetch a value from another register.
+        19-17 bits - which register to get the value from.
+            OR
+        16-1 bits - the value to substract.
+    */
+    SMUL,
+
+    /*
+        24-22 bits - will signal which register to substract into.
+        
+        20 bit     - will signal that we will fetch a value from another register.
+        19-17 bits - which register to get the value from.
+            OR
+        16-1 bits - the value to substract.
+    */
+    DIV,
+
+    /*
+        24-22 bits - will signal which register to substract into.
+        
+        20 bit     - will signal that we will fetch a value from another register.
+        19-17 bits - which register to get the value from.
+            OR
+        16-1 bits - the value to substract.
+    */
+    SDIV,
+
+    /*
+        24-21 bits:
+            0 - Input
+            1 - Output
+
+        20-17 bits:
+            0 - 1 byte
+            1 - 2 bytes
+            2 - 4 bytes
+            3 - string
+
+        16-1 bits - where to (store/read from).
+    */
+    INT,
+
+    /*
+        24-22 bits - left register used for comparison.
+
+        21-19 bits - right register used for comparison.
+    */
+    CMP,
+
+    /*
+        FOR ALL JUMPS.
+        16-1 bits - where to jump to.
+    */
+    JMP,
+    JGR,
+    JGE,
+    JLS,
+    JLE,
 
     /*
         No parameters. Only halt.
@@ -158,8 +275,8 @@ enum Operation {
 };
 
 void load_instruction(struct machine *vm, uint32_t instruction);
-void parse_instruction(struct machine *vm, uint16_t addr);
-void execute_instruction(struct machine *vm);
+uint32_t fetch_next_instruction(struct machine *vm);
+void execute_instruction(struct machine *vm, uint32_t instruction);
 
 
 #endif

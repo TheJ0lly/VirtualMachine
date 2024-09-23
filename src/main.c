@@ -29,24 +29,20 @@ void test_push_pop(struct machine *vm) {
     printf("sp: %d\noffset: %d\npopped value: %d\n\n", vm->sp, vm->sp - default_sp_start, pop(vm));
 }
 
-void test_push_instruction(struct machine *vm) {
-    printf("ip: %d\n", vm->ip);
-    load_instruction(vm, 0xF000F55);
-
-    printf("ip: %d\n", vm->ip);
-
-    load_instruction(vm, 0x1F000F55);
-    printf("ip: %d\n", vm->ip);
-}
-
-
 int main() {
     struct machine vm = {0};
     new_machine(&vm, max_memory_allowed);
 
-    // test_read_write(&vm);
+    load_instruction(&vm, 0x80101);
+    vm.ip = default_ip_start;
 
-    // test_push_pop(&vm);
+    execute_instruction(&vm, fetch_next_instruction(&vm));
+    
 
-    // test_push_instruction(&vm);
+    printf("ip: %d\n", vm.ip);
+    vm.ip = default_ip_start;
+    printf("sp: %d\n", vm.sp);
+    printf("value on the stack: %d\nfirst byte: %d\nsecond byte: %d\n\n", read2(&vm, vm.sp-1), read(&vm, vm.sp-1), read(&vm, vm.sp));
+    printf("first byte: %d\nsecond byte: %d\nlast 2 bytes value: %d\n", read(&vm, vm.ip), read(&vm, vm.ip+1), read2(&vm, vm.ip+2));
+
 }
