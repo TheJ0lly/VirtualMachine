@@ -38,6 +38,7 @@ Stack:
 
 enum Error {
     OK = 0,
+    UNKNOWN_OP,
     EMPTY_STACK,
     STACK_OVERFLOW,
 };
@@ -51,6 +52,12 @@ enum Register {
     R5,
     R6,
     R7,
+
+    /*
+    1 - left side is bigger.
+    0 - equal.
+    2 - right side is bigger.
+    */
     RCOMP,
     RERROR,
     /* 
@@ -61,7 +68,6 @@ enum Register {
 };
 
 extern const uint16_t default_ip_start;
-extern const uint16_t max_memory_allowed;
 extern const uint16_t default_sp_start;
 
 // The structure for the virtual machine.
@@ -86,7 +92,7 @@ struct machine {
 */
 
 // Create a new virtual machine `memory` amount of bytes.
-void new_machine(struct machine *vm, uint16_t memory);
+void new_machine(struct machine *vm);
 
 
 /* 
@@ -105,22 +111,11 @@ uint16_t read2(struct machine *vm, uint16_t addr);
 // Write 2 bytes starting at addr.
 void write2(struct machine *vm, uint16_t addr, uint16_t val);
 
-
-/*
-    Stack handling functions.
-*/
-
-// Push a 16-bit value on top of the stack.
-void push(struct machine *vm, uint16_t val);
-
-// Pop the top of the stack 16-bit value.
-uint16_t pop(struct machine *vm);
-
 /*
     Instructions.
 
     Instruction:
-    0 0 0 0 0 0 0 0 | 0 0 0 0 ... 0 0
+    0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 ... 0 0 0 0 0 0 0 0
         Op Code     | 24 bits for parameters.
 
     Meaning, an instruction has 28 bits of parameters and each occupies at most 4 bytes.
@@ -149,14 +144,18 @@ enum Operation {
         24 bit - signals if the value will go into a register.
             - 1 a register
         23-21 bits - which register
+        20 bit - signals if the value is 8 or 16 bits.
+            1 - 16 bits.
     */
     POP,
 
     /*
+        20 - 18 the register where to move it to.
+
         24 bit - will signal that the value will come from a register.
             - 1 a register
         23-21 bits - which register.
-
+            OR
         16-1 bits - the value
     */
     MOV,
@@ -214,27 +213,7 @@ enum Operation {
             OR
         16-1 bits - the value to substract.
     */
-    SMUL,
-
-    /*
-        24-22 bits - will signal which register to substract into.
-        
-        20 bit     - will signal that we will fetch a value from another register.
-        19-17 bits - which register to get the value from.
-            OR
-        16-1 bits - the value to substract.
-    */
     DIV,
-
-    /*
-        24-22 bits - will signal which register to substract into.
-        
-        20 bit     - will signal that we will fetch a value from another register.
-        19-17 bits - which register to get the value from.
-            OR
-        16-1 bits - the value to substract.
-    */
-    SDIV,
 
     /*
         24-21 bits:
@@ -277,6 +256,7 @@ enum Operation {
 void load_instruction(struct machine *vm, uint32_t instruction);
 uint32_t fetch_next_instruction(struct machine *vm);
 void execute_instruction(struct machine *vm, uint32_t instruction);
+void execute_program(struct machine *vm);
 
 
 #endif

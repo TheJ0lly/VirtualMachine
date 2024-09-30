@@ -5,11 +5,10 @@
     Constants
 */
 const uint16_t default_ip_start = 0xC350;       //50000
-const uint16_t max_memory_allowed = UINT16_MAX; //65535
 const uint16_t default_sp_start = 0x9C40;       //40000
 
-void new_machine(struct machine *vm, uint16_t memory) {
-    vm->memory = calloc(memory, sizeof(uint8_t));
+void new_machine(struct machine *vm) {
+    vm->memory = calloc(UINT16_MAX, sizeof(uint8_t));
     vm->ip = default_ip_start;
     vm->sp = default_sp_start;
     vm->running = true;
@@ -47,9 +46,7 @@ void load_instruction(struct machine *vm, uint32_t instruction) {
     case ADD:
     case SUB:
     case MUL:
-    case SMUL:
     case DIV:
-    case SDIV:
     case INT:
         vm->memory[vm->ip++] = op;
         vm->memory[vm->ip++] = GET_BYTE_2(instruction);
@@ -100,9 +97,7 @@ uint32_t fetch_next_instruction(struct machine *vm) {
     case ADD:
     case SUB:
     case MUL:
-    case SMUL:
     case DIV:
-    case SDIV:
     case INT:
         instruction = (instruction << 8) | read(vm, vm->ip++);
         instruction = (instruction << 8) | read(vm, vm->ip++);
@@ -147,46 +142,289 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
 
     switch (op) {
     case PUSH:
-        { 
-            bool isreg = (instruction & 0x00800000) >> 23;
-            bool is16 = (instruction & 0x00080000) >> 19;
-            uint16_t value = (uint16_t)(instruction & 0x0000FFFF);
-
-            if (isreg) {
-                uint8_t reg = (instruction & 0x00700000) >> 20;
-                value = vm->reg[reg];
-            }
-
-            // Create the offset
-            vm->sp++;
-            if (is16) {
-                write2(vm, vm->sp, value);
-                // We write 2 bytes, so we have a 2 bytes offset.
-                vm->sp += 1;
-            } else {
-                write(vm, vm->sp, (uint8_t)(value & 0x00FF));
-            }
+    { 
+        if (vm->sp + 1 == default_ip_start) {
+            vm->reg[RERROR] = STACK_OVERFLOW;
+            fprintf(stderr, "cannot push - stack overflow (addr: %d)\n", vm->sp + 1);
+            return;
         }
-        break;
+
+        bool isreg = (instruction & 0x00800000) >> 23;
+        bool is16 = (instruction & 0x00080000) >> 19;
+        uint16_t value = (uint16_t)(instruction & 0x0000FFFF);
+
+        if (isreg) {
+            uint8_t reg = (instruction & 0x00700000) >> 20;
+            value = vm->reg[reg];
+        }
+
+
+
+        // Create the offset
+        vm->sp++;
+        if (is16) {
+            write2(vm, vm->sp, value);
+            // We write 2 bytes, so we have a 2 bytes offset.
+            vm->sp += 1;
+        } else {
+            write(vm, vm->sp, (uint8_t)(value & 0x00FF));
+        }
+    }
+    break;
+
+    case POP:
+    {
+        if (vm->sp == default_sp_start) {
+            vm->reg[RERROR] = EMPTY_STACK;
+            fprintf(stderr, "cannot pop - stack is empty (addr: %d)\n", vm->sp - 1);
+            return;
+        }
+
+        bool isreg = (instruction & 0x00800000) >> 23;
+        bool is16 = (instruction & 0x00080000) >> 19;
+        uint8_t reg = (instruction & 0x00700000) >> 20;
+
+        if (is16) {
+            // We get the last 2 bytes of the stack.
+            uint16_t stack_value = read2(vm, vm->sp - 1);
+
+            if (isreg)
+                vm->reg[reg] = stack_value;
+
+            // We decrement by 2, because we pop 2 bytes.
+            vm->sp -= 2;
+        } else {
+            // We get the last byte of the stack.
+            uint8_t stack_value = read(vm, vm->sp);
+
+            if (isreg)
+                vm->reg[reg] = stack_value;
+
+            // We decrement by 1.
+            vm->sp -= 1;
+        }
+    }
+    break;
+
+    case MOV:
+    {
+        // Signal if the value will come from a register.
+        bool isreg = (instruction & 0x00800000) >> 23;
+
+        // The register from which we get the value.
+        uint8_t from_reg = (instruction & 0x00700000) >> 20;
+        
+        // The register in which we will add.
+        uint8_t to_reg = (instruction & 0x000E0000) >> 17;
+
+        // The last 16 bits.
+        uint16_t value = (instruction & 0x0000FFFF);
+
+        if (isreg)
+            vm->reg[to_reg] = vm->reg[from_reg];
+        else
+            vm->reg[to_reg] = value;
+    }
+    break;
+
+    case INC:
+    {
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        vm->reg[reg] += 1;
+    }
+    break;
+
+    case DEC:
+    {
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        vm->reg[reg] -= 1;
+    }
+    break;
+
+    case NEG:
+    {
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        vm->reg[reg] = (vm->reg[reg] ^ 0xFFFF) + 1;
+    }
+    break;
+
+    case ADD:
+    {
+        // The register in which we add.
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        // Signal if the value will come from a register.
+        uint8_t is_from_reg = (instruction & 0x00080000) >> 19;
+        uint8_t from_reg = (instruction & 0x00070000) >> 16;
+
+        // Last 16 bits.
+        uint16_t value = (instruction & 0x0000FFFF);
+
+        if (is_from_reg)
+            vm->reg[reg] += vm->reg[from_reg];
+        else
+            vm->reg[reg] += value;
+
+    }
+    break;
+
+    case SUB:
+    {
+        // The register in which we add.
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        // Signal if the value will come from a register.
+        uint8_t is_from_reg = (instruction & 0x00080000) >> 19;
+        uint8_t from_reg = (instruction & 0x00070000) >> 16;
+
+        // Last 16 bits.
+        uint16_t value = (instruction & 0x0000FFFF);
+
+        if (is_from_reg)
+            vm->reg[reg] -= vm->reg[from_reg];
+        else
+            vm->reg[reg] -= value;
+
+    }
+    break;
+
+    case MUL:
+    {
+        // The register in which we add.
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        // Signal if the value will come from a register.
+        uint8_t is_from_reg = (instruction & 0x00080000) >> 19;
+        uint8_t from_reg = (instruction & 0x00070000) >> 16;
+
+        // Last 16 bits.
+        uint16_t value = (instruction & 0x0000FFFF);
+
+        if (is_from_reg)
+            vm->reg[reg] *= vm->reg[from_reg];
+        else
+            vm->reg[reg] *= value;
+
+    }
+    break;
+
+    case DIV:
+    {
+        // The register in which we add.
+        uint8_t reg = (instruction & 0x00E00000) >> 21;
+
+        // Signal if the value will come from a register.
+        uint8_t is_from_reg = (instruction & 0x00080000) >> 19;
+        uint8_t from_reg = (instruction & 0x00070000) >> 16;
+
+        // Last 16 bits.
+        uint16_t value = (instruction & 0x0000FFFF);
+
+        if (is_from_reg)
+            vm->reg[reg] /= vm->reg[from_reg];
+        else
+            vm->reg[reg] /= value;
+
+    }
+    break;
+
+    case INT:
+    {
+
+    }
+    break;
+
+    case CMP:
+    {
+        uint8_t reg1 = (instruction & 0x00E00000) >> 21;
+        uint8_t reg2 = (instruction & 0x001E0000) >> 18;
+
+        printf("R1: %d --- R2: %d\n", vm->reg[reg1], vm->reg[reg2]);
+
+        if (vm->reg[reg1] > vm->reg[reg2])
+            vm->reg[RCOMP] = 1;
+        else if (vm->reg[reg1] < vm->reg[reg2])
+            vm->reg[RCOMP] = 2;
+        else
+            vm->reg[RCOMP] = 0;
+    }
+    break;
+
+    case JMP:
+    {
+        // We decrement by 1, because we will increment in the execution loop.
+        uint16_t location = (instruction & 0x0000FFFF) - 1;
+
+        vm->ip = location;
+    }
+    break;
+
+    case JGR:
+    {
+        // We decrement by 1, because we will increment in the execution loop.
+        uint16_t location = (instruction & 0x0000FFFF) - 1;
+
+        /*
+            We check for 1, because we compare REG1 and REG2, 
+            and greater means that REG1 is bigger.
+        */ 
+        if (vm->reg[RCOMP] == 1)
+            vm->ip = location;
+    }
+    break;
+
+    case JGE:
+    {
+        // We decrement by 1, because we will increment in the execution loop.
+        uint16_t location = (instruction & 0x0000FFFF) - 1;
+
+        /*
+            We check for 1 and for 0, because we compare REG1 and REG2, 
+            and greater means that REG1 is bigger.
+        */ 
+        if (vm->reg[RCOMP] == 1 || vm->reg[RCOMP] == 0)
+            vm->ip = location;
+    }
+    break;
+
+    case JLS:
+    {
+        // We decrement by 1, because we will increment in the execution loop.
+        uint16_t location = (instruction & 0x0000FFFF) - 1;
+
+        /*
+            We check for 2, because we compare REG1 and REG2, 
+            and less means that REG1 is smaller.
+        */ 
+        if (vm->reg[RCOMP] == 2)
+            vm->ip = location;
+    }
+    break;
+
+    case JLE:
+    {
+        // We decrement by 1, because we will increment in the execution loop.
+        uint16_t location = (instruction & 0x0000FFFF) - 1;
+
+        /*
+            We check for 1 and for 0, because we compare REG1 and REG2, 
+            and less means that REG1 is smaller.
+        */ 
+        if (vm->reg[RCOMP] == 2 || vm->reg[RCOMP] == 0)
+            vm->ip = location;
+    }
+    break;
+
+    case HALT:
+    vm->running = false;
+    break;
+
     default:
+    printf("unknown op: %d\n", op);
+    vm->reg[RERROR] = UNKNOWN_OP;
     break;
     }
-}
-
-void push(struct machine *vm, uint16_t val) {
-    if (vm->sp + 1 == default_ip_start) {
-        vm->reg[RERROR] = STACK_OVERFLOW;
-        fprintf(stderr, "cannot push - entering instructions section (addr: %d)\n", vm->sp + 1);
-        return;
-    }
-    vm->memory[++vm->sp] = val;
-}
-
-uint16_t pop(struct machine *vm) {
-    if (vm->sp == default_sp_start) {
-        vm->reg[RERROR] = EMPTY_STACK;
-        fprintf(stderr, "cannot pop - stack is empty (addr: %d)\n", vm->sp - 1);
-        return 0;
-    }
-    return vm->memory[vm->sp--];
 }
