@@ -36,6 +36,19 @@ void write2(struct machine *vm, uint16_t addr, uint16_t val) {
     vm->memory[addr + 1] = (uint8_t)(val >> 8);
 }
 
+char *err_as_string(enum Error err) {
+    switch (err) {
+    case OK:
+        return "OK - no error ocurred";
+    case EMPTY_STACK:
+        return "EMPTY STACK - performed stack operation with no or not enough elements";
+    case STACK_OVERFLOW:
+        return "STACK OVERFLOW - stack pointer has surpassed its allowed space";
+    case UNKNOWN_OP:
+        return "UNKNOWN OPERATION PERFORMED";
+    }
+}
+
 void load_instruction(struct machine *vm, uint32_t instruction) {
     enum Operation op = GET_BYTE_1(instruction);
 
@@ -135,6 +148,16 @@ uint32_t fetch_next_instruction(struct machine *vm) {
     }
 
     return instruction;
+}
+
+void load_program(struct machine *vm, uint32_t *program, uint16_t size) {
+    for (int i = 0; i < size; i++) {
+        load_instruction(vm, program[i]);
+    }
+}
+
+void reset_ip(struct machine *vm) {
+    vm->ip = default_ip_start;
 }
 
 void execute_instruction(struct machine *vm, uint32_t instruction) {
@@ -426,5 +449,16 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
     printf("unknown op: %d\n", op);
     vm->reg[RERROR] = UNKNOWN_OP;
     break;
+    }
+}
+
+void execute_program(struct machine *vm) {
+    while (vm->running) {
+        execute_instruction(&vm, fetch_next_instruction(&vm));
+
+        if (vm->reg[RERROR] != 0) {
+            printf("ERROR: %s\nexit code %d\n", err_as_string(vm->reg[RERROR]), vm->reg[RERROR]);
+            break;
+        }
     }
 }

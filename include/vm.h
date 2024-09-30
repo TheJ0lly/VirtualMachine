@@ -38,9 +38,9 @@ Stack:
 
 enum Error {
     OK = 0,
-    UNKNOWN_OP,
     EMPTY_STACK,
     STACK_OVERFLOW,
+    UNKNOWN_OP,
 };
 
 enum Register {
@@ -253,7 +253,10 @@ enum Operation {
     HALT,
 };
 
+char *err_as_string(enum Error err);
 void load_instruction(struct machine *vm, uint32_t instruction);
+void load_program(struct machine *vm, uint32_t *program, uint16_t size);
+void reset_ip(struct machine *vm);
 uint32_t fetch_next_instruction(struct machine *vm);
 void execute_instruction(struct machine *vm, uint32_t instruction);
 void execute_program(struct machine *vm);
