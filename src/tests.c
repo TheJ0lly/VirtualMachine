@@ -107,6 +107,8 @@ void test_inc() {
     execute_instruction(&vm, 0x3E00000);
 
     printf("Incremented R7: %d\n", vm.reg[R7]);
+
+    free(vm.memory);
 }
 
 void test_dec() {
@@ -121,6 +123,7 @@ void test_dec() {
     execute_instruction(&vm, 0x4E00000);
 
     printf("Decremented R7: %d\n", vm.reg[R7]);
+    free(vm.memory);
 }
 
 void test_neg() {
@@ -136,6 +139,7 @@ void test_neg() {
     printf("Negated R7: %d\n", vm.reg[R7]);
     execute_instruction(&vm, 0x5E00000);
     printf("RENegated R7: %d\n", vm.reg[R7]);
+    free(vm.memory);
 }
 
 void test_add() {
@@ -151,6 +155,7 @@ void test_add() {
     vm.reg[R6] = 10;
     execute_instruction(&vm, 0x6CF0000);
     printf("Initial R6: 10\nAdded R7 into R6: %d\n", vm.reg[R6]);    
+    free(vm.memory);
 }
 
 void test_sub() {
@@ -165,7 +170,7 @@ void test_sub() {
     vm.reg[R6] = 79;
     execute_instruction(&vm, 0x7CF0000);
     printf("Initial R6: 79\nSub 10 from R6: %d\n", vm.reg[R6]);
-
+    free(vm.memory);
 }
 
 void test_mul() {
@@ -180,6 +185,7 @@ void test_mul() {
     vm.reg[R6] = 5;
     execute_instruction(&vm, 0x8CF0000);
     printf("Initial R6: 5\nMul R7 with R6: %d\n", vm.reg[R6]);
+    free(vm.memory);
 }
 
 void test_div() {
@@ -194,6 +200,7 @@ void test_div() {
     vm.reg[R6] = 50;
     execute_instruction(&vm, 0x9CF0000);
     printf("Initial R6: 50\nDivided R6 with R7: %d\n", vm.reg[R6]);
+    free(vm.memory);
 }
 
 void test_int() {
@@ -222,6 +229,7 @@ void test_cmp() {
 
     execute_instruction(&vm, 0xBF80000);
     printf("Compare reg: %d --- Expected 0\n", vm.reg[RCOMP]);
+    free(vm.memory);
 }
 
 void test_jmps() {
@@ -260,7 +268,7 @@ void test_jmps() {
     execute_instruction(&vm, 0xBF80000);
     execute_instruction(&vm, 0x1000000E);
     printf("Compare reg: %d --- JLE IP: %d\n", vm.reg[RCOMP], vm.ip + 1);
-
+    free(vm.memory);
 }
 
 int main() {
