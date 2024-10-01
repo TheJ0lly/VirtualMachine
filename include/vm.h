@@ -40,6 +40,9 @@ enum Error {
     OK = 0,
     EMPTY_STACK,
     STACK_OVERFLOW,
+    INPUT_ERROR,
+    OUTPUT_ERROR,
+    UNKNOWN_DATA_TYPE,
     UNKNOWN_OP,
 };
 
@@ -100,10 +103,10 @@ void new_machine(struct machine *vm);
 */
 
 // Read 1 byte located at addr. 
-uint8_t read(struct machine *vm, uint16_t addr);
+uint8_t read1(struct machine *vm, uint16_t addr);
 
 // Write 1 byte at addr.
-void write(struct machine *vm, uint16_t addr, uint8_t val);
+void write1(struct machine *vm, uint16_t addr, uint8_t val);
 
 // Read 2 bytes starting from addr.
 uint16_t read2(struct machine *vm, uint16_t addr);
@@ -216,21 +219,21 @@ enum Operation {
     DIV,
 
     /*
+        R0 will ALWAYS store the address in memory of the I/O value.
+        R1 will ALWAYS store the number of characters to handle.
+
         24-21 bits:
             0 - Input
             1 - Output
+
             20-17 bits:
-                0 - 1 byte
-                1 - 2 bytes
-                2 - 4 bytes
+                1 - 1 byte
+                2 - 2 bytes
                 3 - string
 
             NOT YET THOUGHT OF
             2 - Audio ?
             3 - Video ?
-
-
-        16-1 bits - where to (store/read from).
     */
     INT,
 
@@ -262,6 +265,7 @@ void load_instruction(struct machine *vm, uint32_t instruction);
 void load_program(struct machine *vm, uint32_t *program, uint16_t size);
 void reset_ip(struct machine *vm);
 uint32_t fetch_next_instruction(struct machine *vm);
+void handle_interrupt(struct machine *vm, uint8_t type, uint8_t size);
 void execute_instruction(struct machine *vm, uint32_t instruction);
 void execute_program(struct machine *vm);
 

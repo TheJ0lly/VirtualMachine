@@ -1,5 +1,6 @@
 #include "../include/vm.h"
 #include <malloc.h>
+#include <unistd.h>
 
 /*
     Constants
@@ -19,7 +20,7 @@ void new_machine(struct machine *vm) {
     vm->reg[RERROR] = 0;
 }
 
-uint8_t read(struct machine *vm, uint16_t addr) {
+uint8_t read1(struct machine *vm, uint16_t addr) {
     return vm->memory[addr];
 }
 
@@ -27,7 +28,7 @@ uint16_t read2(struct machine *vm, uint16_t addr) {
     return ((uint16_t)vm->memory[addr]) | (((uint16_t)vm->memory[addr+1]) << 8);
 }
 
-void write(struct machine *vm, uint16_t addr, uint8_t val) {
+void write1(struct machine *vm, uint16_t addr, uint8_t val) {
     vm->memory[addr] = val;
 }
 
@@ -102,7 +103,7 @@ void load_instruction(struct machine *vm, uint32_t instruction) {
 }
 
 uint32_t fetch_next_instruction(struct machine *vm) {
-    enum Operation op = read(vm, vm->ip++);
+    enum Operation op = read1(vm, vm->ip++);
     uint32_t instruction = op;
 
     switch (op) {
@@ -114,9 +115,9 @@ uint32_t fetch_next_instruction(struct machine *vm) {
     case MUL:
     case DIV:
     case INT:
-        instruction = (instruction << 8) | read(vm, vm->ip++);
-        instruction = (instruction << 8) | read(vm, vm->ip++);
-        instruction = (instruction << 8) | read(vm, vm->ip++);
+        instruction = (instruction << 8) | read1(vm, vm->ip++);
+        instruction = (instruction << 8) | read1(vm, vm->ip++);
+        instruction = (instruction << 8) | read1(vm, vm->ip++);
         break;
     
     // Jumps
@@ -126,8 +127,8 @@ uint32_t fetch_next_instruction(struct machine *vm) {
     case JLS:
     case JLE:
         instruction = instruction << 8; // Null space
-        instruction = (instruction << 8) | read(vm, vm->ip++);
-        instruction = (instruction << 8) | read(vm, vm->ip++);
+        instruction = (instruction << 8) | read1(vm, vm->ip++);
+        instruction = (instruction << 8) | read1(vm, vm->ip++);
         break;
 
     // 2 bytes instructions
@@ -136,7 +137,7 @@ uint32_t fetch_next_instruction(struct machine *vm) {
     case DEC:
     case NEG:
     case CMP:
-        instruction = (instruction << 8) | read(vm, vm->ip++);
+        instruction = (instruction << 8) | read1(vm, vm->ip++);
         instruction = instruction << 16;
         break;
 
@@ -160,6 +161,91 @@ void load_program(struct machine *vm, uint32_t *program, uint16_t size) {
 
 void reset_ip(struct machine *vm) {
     vm->ip = default_ip_start;
+}
+
+void handle_interrupt(struct machine *vm, uint8_t type, uint8_t size) {
+    switch (type)
+    {
+    case 0: // Input
+        switch (size)
+        {
+        case 1: // 1 byte
+            fread(&vm->reg[R0], 1, 1, stdin);
+        break;
+
+        case 2: // 2 bytes
+            fread(&vm->reg[R0], 1, 2, stdin);
+        break;
+
+        case 3: // string
+        {
+            // Get the number of elements to read. 
+            uint16_t count = vm->reg[R1];
+            uint16_t index = 0;
+            char c = 0;
+            while (index < count - 1) {
+                if (fread(&c, 1, 1, stdin) > 0) {
+                    write1(vm, vm->reg[R0] + index, c);
+                } else {
+                    vm->reg[RERROR] = INPUT_ERROR;
+                    return;
+                }
+                index++;
+            }
+
+            // Add null-char for safety. Might delete it later?
+            write1(vm, vm->reg[R0] + index, 0);
+        }
+        break;
+
+        default:
+        vm->reg[RERROR] = UNKNOWN_DATA_TYPE;
+        return;
+        }
+
+    break;
+    
+    case 1: // Output
+        switch (size)
+        {
+        case 1: // 1 byte
+        {
+            uint8_t c = read1(vm, vm->reg[R0]); 
+            fwrite(&c, 1, 1, stdin);
+        }
+        break;
+
+        case 2: // 2 bytes
+        {
+            uint16_t c = read2(vm, vm->reg[R0]);
+            fwrite(&c, 2, 1, stdin);
+        }
+        break;
+
+        case 3: // string
+        {
+            // Get the number of elements to write. 
+            uint16_t count = vm->reg[R1];
+            uint16_t index = 0;
+            while (index < count - 1) {
+                if (printf("%c", read1(vm, vm->reg[R0] + index)) == 0) {
+                    vm->reg[RERROR] = OUTPUT_ERROR;
+                    return;
+                }
+                index++;
+            }
+        }
+        break;
+
+        default:
+        vm->reg[RERROR] = UNKNOWN_DATA_TYPE;
+        return;
+        }
+    break;
+    
+    default:
+        break;
+    }
 }
 
 void execute_instruction(struct machine *vm, uint32_t instruction) {
@@ -192,7 +278,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
             // We write 2 bytes, so we have a 2 bytes offset.
             vm->sp += 1;
         } else {
-            write(vm, vm->sp, (uint8_t)(value & 0x00FF));
+            write1(vm, vm->sp, (uint8_t)(value & 0x00FF));
         }
     }
     break;
@@ -220,7 +306,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
             vm->sp -= 2;
         } else {
             // We get the last byte of the stack.
-            uint8_t stack_value = read(vm, vm->sp);
+            uint8_t stack_value = read1(vm, vm->sp);
 
             if (isreg)
                 vm->reg[reg] = stack_value;
@@ -358,6 +444,10 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
 
     case INT:
     {
+        uint8_t type = (instruction & 0x00F00000) >> 20;
+        uint8_t size = (instruction & 0x000F0000) >> 16;
+
+        handle_interrupt(vm, type, size);
 
     }
     break;

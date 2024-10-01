@@ -8,15 +8,15 @@ void test_read_write() {
 
     printf("\n===== TEST READ WRITE =====\n");
 
-    write(&vm, 0, 1);
-    write(&vm, 1, 1);
+    write1(&vm, 0, 1);
+    write1(&vm, 1, 1);
 
     printf("read2 value at 0: %d\nexpected value: 257\n\n", read2(&vm, 0));
 
     write2(&vm, 2, 257);
 
-    printf("read value at 2: %d\nexpected value: 1\n\n", read(&vm, 2));
-    printf("read value at 3: %d\nexpected value: 1\n\n", read(&vm, 3));
+    printf("read value at 2: %d\nexpected value: 1\n\n", read1(&vm, 2));
+    printf("read value at 3: %d\nexpected value: 1\n\n", read1(&vm, 3));
 
     printf("read2 value at 2: %d\nexpected value: 257\n", read2(&vm, 2));
 
@@ -42,7 +42,7 @@ void test_push() {
 
     execute_instruction(&vm, 0xE00000);
 
-    printf("Stack value(8-bit): %d\nStack pointer: %d\n", read(&vm, vm.sp), vm.sp);
+    printf("Stack value(8-bit): %d\nStack pointer: %d\n", read1(&vm, vm.sp), vm.sp);
 
     free(vm.memory);
 }
@@ -59,7 +59,7 @@ void test_pop() {
 
     // We pop the value.
     execute_instruction(&vm, 0x1000000);
-    printf("Popped value(8-bit): %d\nStack pointer: %d\n", read(&vm, vm.sp + 1), vm.sp);
+    printf("Popped value(8-bit): %d\nStack pointer: %d\n", read1(&vm, vm.sp + 1), vm.sp);
     // We reset the sp.
     vm.sp += 1;
 
@@ -203,10 +203,6 @@ void test_div() {
     free(vm.memory);
 }
 
-void test_int() {
-    printf("\n\n ===== INT DOES NOTHING YET =====\n");
-}
-
 void test_cmp() {
     struct machine vm = {0};
     new_machine(&vm);
@@ -271,6 +267,21 @@ void test_jmps() {
     free(vm.memory);
 }
 
+void test_int() {
+    struct machine vm = {0};
+    new_machine(&vm);
+    printf("\n\n===== TEST INT =====\n");
+
+    fflush(stdin);
+    
+    // Input and Output "Hello, World\n" size 14, starting at address 0. 
+    vm.reg[R0] = 0;
+    vm.reg[R1] = 14;
+    execute_instruction(&vm, 0xA030000);
+
+    execute_instruction(&vm, 0xA130000);
+}
+
 int main() {
     printf("\n===== TESTING =====\n");
 
@@ -285,9 +296,9 @@ int main() {
     test_sub();
     test_mul();
     test_div();
-    test_int();
     test_cmp();
     test_jmps();
+    test_int();
 
 
     printf("\n===================\n\n");
