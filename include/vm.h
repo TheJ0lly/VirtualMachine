@@ -219,12 +219,16 @@ enum Operation {
         24-21 bits:
             0 - Input
             1 - Output
+            20-17 bits:
+                0 - 1 byte
+                1 - 2 bytes
+                2 - 4 bytes
+                3 - string
 
-        20-17 bits:
-            0 - 1 byte
-            1 - 2 bytes
-            2 - 4 bytes
-            3 - string
+            NOT YET THOUGHT OF
+            2 - Audio ?
+            3 - Video ?
+
 
         16-1 bits - where to (store/read from).
     */
