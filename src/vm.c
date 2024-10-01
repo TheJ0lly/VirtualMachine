@@ -46,6 +46,8 @@ char *err_as_string(enum Error err) {
         return "STACK OVERFLOW - stack pointer has surpassed its allowed space";
     case UNKNOWN_OP:
         return "UNKNOWN OPERATION PERFORMED";
+    default:
+        return "UNKNOWN STATE OF VM";
     }
 }
 
@@ -365,8 +367,6 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
         uint8_t reg1 = (instruction & 0x00E00000) >> 21;
         uint8_t reg2 = (instruction & 0x001E0000) >> 18;
 
-        printf("R1: %d --- R2: %d\n", vm->reg[reg1], vm->reg[reg2]);
-
         if (vm->reg[reg1] > vm->reg[reg2])
             vm->reg[RCOMP] = 1;
         else if (vm->reg[reg1] < vm->reg[reg2])
@@ -379,7 +379,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
     case JMP:
     {
         // We decrement by 1, because we will increment in the execution loop.
-        uint16_t location = (instruction & 0x0000FFFF) - 1;
+        uint16_t location = (instruction & 0x0000FFFF);
 
         vm->ip = location;
     }
@@ -388,7 +388,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
     case JGR:
     {
         // We decrement by 1, because we will increment in the execution loop.
-        uint16_t location = (instruction & 0x0000FFFF) - 1;
+        uint16_t location = (instruction & 0x0000FFFF);
 
         /*
             We check for 1, because we compare REG1 and REG2, 
@@ -402,7 +402,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
     case JGE:
     {
         // We decrement by 1, because we will increment in the execution loop.
-        uint16_t location = (instruction & 0x0000FFFF) - 1;
+        uint16_t location = (instruction & 0x0000FFFF);
 
         /*
             We check for 1 and for 0, because we compare REG1 and REG2, 
@@ -416,7 +416,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
     case JLS:
     {
         // We decrement by 1, because we will increment in the execution loop.
-        uint16_t location = (instruction & 0x0000FFFF) - 1;
+        uint16_t location = (instruction & 0x0000FFFF);
 
         /*
             We check for 2, because we compare REG1 and REG2, 
@@ -430,7 +430,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
     case JLE:
     {
         // We decrement by 1, because we will increment in the execution loop.
-        uint16_t location = (instruction & 0x0000FFFF) - 1;
+        uint16_t location = (instruction & 0x0000FFFF);
 
         /*
             We check for 1 and for 0, because we compare REG1 and REG2, 
@@ -454,7 +454,7 @@ void execute_instruction(struct machine *vm, uint32_t instruction) {
 
 void execute_program(struct machine *vm) {
     while (vm->running) {
-        execute_instruction(&vm, fetch_next_instruction(&vm));
+        execute_instruction(vm, fetch_next_instruction(vm));
 
         if (vm->reg[RERROR] != 0) {
             printf("ERROR: %s\nexit code %d\n", err_as_string(vm->reg[RERROR]), vm->reg[RERROR]);

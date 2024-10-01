@@ -238,28 +238,28 @@ void test_jmps() {
     printf("\n\n===== TEST JMP =====\n");
 
     execute_instruction(&vm, 0xC000001);
-    printf("JMP IP: %d\n", vm.ip + 1);
+    printf("JMP IP: %d\n", vm.ip);
 
     vm.reg[R7] = 2;
     vm.reg[R6] = 1;
     execute_instruction(&vm, 0xBF80000);
     execute_instruction(&vm, 0xD00000A);
 
-    printf("Compare reg: %d --- JGR IP: %d\n", vm.reg[RCOMP], vm.ip + 1);
+    printf("Compare reg: %d --- JGR IP: %d\n", vm.reg[RCOMP], vm.ip);
 
     vm.reg[R7] = 2;
     vm.reg[R6] = 2;
 
     execute_instruction(&vm, 0xBF80000);
     execute_instruction(&vm, 0xE000005);
-    printf("Compare reg: %d --- JGE IP: %d\n", vm.reg[RCOMP], vm.ip + 1);
+    printf("Compare reg: %d --- JGE IP: %d\n", vm.reg[RCOMP], vm.ip);
 
     vm.reg[R7] = 1;
     vm.reg[R6] = 2;
 
     execute_instruction(&vm, 0xBF80000);
     execute_instruction(&vm, 0xF000009);
-    printf("Compare reg: %d --- JLS IP: %d\n", vm.reg[RCOMP], vm.ip + 1);
+    printf("Compare reg: %d --- JLS IP: %d\n", vm.reg[RCOMP], vm.ip);
 
 
     vm.reg[R7] = 3;
@@ -267,7 +267,7 @@ void test_jmps() {
 
     execute_instruction(&vm, 0xBF80000);
     execute_instruction(&vm, 0x1000000E);
-    printf("Compare reg: %d --- JLE IP: %d\n", vm.reg[RCOMP], vm.ip + 1);
+    printf("Compare reg: %d --- JLE IP: %d\n", vm.reg[RCOMP], vm.ip);
     free(vm.memory);
 }
 
