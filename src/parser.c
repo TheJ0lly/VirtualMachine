@@ -1,7 +1,6 @@
 #include "../include/parser.h"
 #include <malloc.h>
-#include <errno.h>
-#include <string.h>
+#include <stdbool.h>
 
 void init_sstring(sstring *str, uint16_t size) {
     str->string = malloc(size);
@@ -23,19 +22,33 @@ void close_file(FILE *file) {
 void get_line_from_file(FILE *file, sstring *line) {
     uint16_t index = 0;
     char c = 0;
+    bool jump_past_nl = false;
 
     do {
-        fread(&c, 1, 1, file);
+        if (fread(&c, 1, 1, file) == 0) {
+            break;
+        }
         index++;
 
-    } while (c != '\n' && c != EOF);
+        if (c == '\n') {
+            jump_past_nl = true;
+            break;
+        }
+
+    } while (c != '\n' && c != EOF && file->_IO_read_ptr != file->_IO_read_end);
 
     // We reset the file pointer to index bytes backwards.
-    file->_IO_read_ptr = file->_IO_read_ptr - index;
+
+    if (file->_IO_read_ptr > file->_IO_read_base)
+        file->_IO_read_ptr = file->_IO_read_ptr - index;
+
+
+    init_sstring(line, index);
 
     // We decrement the index because the last char accounted for is either '\n' or EOF
-
-    init_sstring(line, index--);
+    if (jump_past_nl) {
+        index--;
+    }
 
     // We add the characters in the buffer
     for (int i = 0; i < index; i++) {
@@ -43,8 +56,11 @@ void get_line_from_file(FILE *file, sstring *line) {
         line->string[i] = c;
     }
 
+
     // To get rid of the trailing '\n'
-    fread(&c, 1, 1, file);
+    if (jump_past_nl) {
+        fread(&c, 1, 1, file);
+    }
 }
 
 void get_next_word(sstring *word, sstring *line, char sep) {
