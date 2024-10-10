@@ -1,7 +1,7 @@
 SRC := $(filter-out src/tests.c, $(wildcard src/*.c))
 TEST_SRC := $(filter-out src/main.c, $(wildcard src/*.c))
 
-default:
+help:
 	@echo "Usage: make <compile/run>" 
 
 compile: $(SRC)
